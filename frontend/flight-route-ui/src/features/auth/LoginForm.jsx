@@ -1,5 +1,4 @@
 import { Card } from '@mui/material';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function LoginForm({ onLogin, error, loading }) {
