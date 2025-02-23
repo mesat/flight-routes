@@ -1,16 +1,41 @@
-import { useLanguage } from '../contexts/LanguageContext';
-import Sidebar from './Sidebar';
-import Header from './Header';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Card } from '@mui/material';
 
-export default function MainLayout({ children }) {
-  const { t } = useLanguage();
-  
+const MainLayout = ({ onLogout, children }) => {
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow p-4">
+        <nav>
+          <ul className="space-y-2">
+            <li>
+              <Link to="/routes" className="text-blue-600 hover:underline">Routes</Link>
+            </li>
+            <li>
+              <Link to="/locations" className="text-blue-600 hover:underline">Locations</Link>
+            </li>
+            <li>
+              <Link to="/transportations" className="text-blue-600 hover:underline">Transportations</Link>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+      
+      {/* Ana İçerik */}
       <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 p-6">
+        <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold">Flight Routes</h1>
+          {onLogout && (
+            <button 
+              onClick={onLogout} 
+              className="bg-red-500 hover:bg-red-600 py-2 px-4 rounded"
+            >
+              Logout
+            </button>
+          )}
+        </header>
+        <main className="p-6 flex-1">
           <Card className="p-6">
             {children}
           </Card>
@@ -18,4 +43,6 @@ export default function MainLayout({ children }) {
       </div>
     </div>
   );
-}
+};
+
+export default MainLayout;

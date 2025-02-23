@@ -5,7 +5,7 @@ import MainLayout from './layouts/MainLayout';
 import LocationsManagement from './components/locations/LocationsManagement';
 import TransportationsManagement from './components/transportations/TransportationsManagement';
 import RoutesManagement from './components/routes/RoutesManagement';
-
+import './App.css'
 function App() {
   const [auth, setAuth] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,11 +24,11 @@ function App() {
   }, []);
 
   const handleLogin = async (username, password) => {
-    // Login logic
+    // Login logic burada olacak.
   };
 
   const handleLogout = () => {
-    // Logout logic
+    // Logout logic burada olacak.
   };
 
   if (loading) {

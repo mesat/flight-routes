@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card } from '@/components/ui/card';
+import { Card } from '@mui/material';
 
 function RoutesList({ routes, t }) {
     // Helper function to get icon for transportation type

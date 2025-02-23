@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@mui/material'
 
 function LocationsList({ locations, onEdit, onDelete, t }) {
     return (
