@@ -31,3 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
+backend/flight-routes/src/main/java/com/thy/flightroutes/.DS_Store
