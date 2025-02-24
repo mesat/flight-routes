@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card } from '@mui/material';
 
 const MainLayout = ({ onLogout, children }) => {
   return (
@@ -35,11 +34,9 @@ const MainLayout = ({ onLogout, children }) => {
             </button>
           )}
         </header>
-        <main className="p-6 flex-1">
-          <Card className="p-6">
+        <div className="p-6 flex-1">
             {children}
-          </Card>
-        </main>
+        </div>
       </div>
     </div>
   );

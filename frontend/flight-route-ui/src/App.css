@@ -9,7 +9,6 @@
   text-align: center;
 }
 
-
 @custom-variant dark (&:is(.dark *));
 
 .logo {
