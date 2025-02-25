@@ -1,4 +1,3 @@
-// MainApp.jsx
 import React from 'react';
 import LoginForm from './features/auth/LoginForm';
 import MainLayout from './layouts/MainLayout';

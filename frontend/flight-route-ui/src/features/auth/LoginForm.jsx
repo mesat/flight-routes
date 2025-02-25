@@ -33,7 +33,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="w-full min-w-[600px] min-h-screen flex items-center justify-center ">
       <Card className="w-full max-w-md p-6">
         <form onSubmit={handleSubmit}>
           <h1 className="text-2xl font-bold text-center mb-6">{t.auth.login}</h1>
