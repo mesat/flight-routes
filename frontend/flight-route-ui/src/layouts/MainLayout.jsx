@@ -1,45 +1,47 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import Header from './Header';
+import Sidebar from './Sidebar';
+import LocationsManagement from '../components/locations/LocationsManagement';
+import TransportationsManagement from '../components/transportations/TransportationsManagement';
+import RoutesManagement from '../components/routes/RoutesManagement';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../hooks/useAuth.jsx'; // Eksik olan import eklendi
 
-const MainLayout = ({ onLogout, children }) => {
+function MainLayout() {
+  const { t } = useLanguage();
+  const { isAdmin, auth, logout } = useAuth();
+  const [currentPage, setCurrentPage] = useState('routes');
+  
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow p-4">
-        <nav>
-          <ul className="space-y-2">
-            <li>
-              <Link to="/routes" className="text-blue-600 hover:underline">Routes</Link>
-            </li>
-            <li>
-              <Link to="/locations" className="text-blue-600 hover:underline">Locations</Link>
-            </li>
-            <li>
-              <Link to="/transportations" className="text-blue-600 hover:underline">Transportations</Link>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-      
-      {/* Ana İçerik */}
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        isAdmin={isAdmin}
+      />
       <div className="flex-1 flex flex-col">
-        <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Flight Routes</h1>
-          {onLogout && (
-            <button 
-              onClick={onLogout} 
-              className="bg-red-500 hover:bg-red-600 py-2 px-4 rounded"
-            >
-              Logout
-            </button>
-          )}
-        </header>
-        <div className="p-6 flex-1">
-            {children}
-        </div>
+        <Header
+          currentPage={currentPage}
+          auth={auth}
+          onLogout={logout}
+        />
+        <main className="flex-1 p-6">
+          <Card className="p-6">
+            {currentPage === 'locations' && isAdmin && (
+              <LocationsManagement />
+            )}
+            {currentPage === 'transportations' && isAdmin && (
+              <TransportationsManagement />
+            )}
+            {currentPage === 'routes' && (
+              <RoutesManagement />
+            )}
+          </Card>
+        </main>
       </div>
     </div>
   );
-};
+}
 
 export default MainLayout;

@@ -1,6 +1,6 @@
 // src/layouts/BaseLayout.jsx
-import ErrorBoundary from '@/components/ErrorBoundary';
-import { useLanguage } from '@/contexts/LanguageContext';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function BaseLayout({ children }) {
   const { t } = useLanguage();
