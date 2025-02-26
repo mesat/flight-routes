@@ -1,6 +1,7 @@
 package com.thy.flightroutes.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class Transportation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

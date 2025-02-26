@@ -19,13 +19,13 @@ import java.util.stream.Collectors;
 public class LocationService {
     private final LocationRepository locationRepository;
 
-    @Cacheable(value = "locations", key = "'all'")
+    @Cacheable(value = "locations", key = "'all'", unless = "#result == null || #result.isEmpty()")
     public List<LocationDTO> getAllLocations() {
         return locationRepository.findAll().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
-    }
 
+    }
     @Cacheable(value = "locations", key = "#code")
     public LocationDTO getLocationByCode(String code) {
         Location location = locationRepository.findByLocationCode(code)

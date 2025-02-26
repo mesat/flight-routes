@@ -1,0 +1,62 @@
+[
+    {
+        "name": "Turkish Airlines",
+        "country": "Turkey",
+        "city": "Istanbul",
+        "locationCode": "TK"
+    },
+    {
+        "name": "Lufthansa",
+        "country": "Germany",
+        "city": "Cologne",
+        "locationCode": "LH"
+    },
+    {
+        "name": "British Airways",
+        "country": "United Kingdom",
+        "city": "London",
+        "locationCode": "BA"
+    },
+    {
+        "name": "Air France",
+        "country": "France",
+        "city": "Paris",
+        "locationCode": "AF"
+    },
+    {
+        "name": "Emirates",
+        "country": "United Arab Emirates",
+        "city": "Dubai",
+        "locationCode": "EK"
+    },
+    {
+        "name": "Delta Air Lines",
+        "country": "United States",
+        "city": "Atlanta",
+        "locationCode": "DL"
+    },
+    {
+        "name": "American Airlines",
+        "country": "United States",
+        "city": "Fort Worth",
+        "locationCode": "AA"
+    },
+    {
+        "name": "Qantas",
+        "country": "Australia",
+        "city": "Sydney",
+        "locationCode": "QF"
+    },
+    {
+        "name": "Singapore Airlines",
+        "country": "Singapore",
+        "city": "Singapore",
+        "locationCode": "SQ"
+    },
+    {
+        "name": "Qatar Airways",
+        "country": "Qatar",
+        "city": "Doha",
+        "locationCode": "QR"
+    }
+]
