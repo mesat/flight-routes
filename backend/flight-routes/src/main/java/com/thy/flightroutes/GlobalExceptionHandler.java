@@ -1,24 +1,29 @@
 package com.thy.flightroutes;
 
 import com.thy.flightroutes.exception.ResourceNotFoundException;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
+@Hidden
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleValidationErrors(MethodArgumentNotValidException ex) {
+    private ApiError handleValidationErrors(MethodArgumentNotValidException ex) {
+        log.error(ex.getMessage(), ex);
         List<String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -34,31 +39,34 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiError handleResourceNotFound(ResourceNotFoundException ex) {
+    private ApiError handleResourceNotFound(ResourceNotFoundException ex) {
+        log.error(ex.getMessage(), ex);
         return new ApiError(
                 HttpStatus.NOT_FOUND.value(),
                 "Resource not found",
-                Arrays.asList(ex.getMessage())
+                Collections.singletonList(ex.getMessage())
         );
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleIllegalArgument(IllegalArgumentException ex) {
+    private ApiError handleIllegalArgument(IllegalArgumentException ex) {
+        log.error(ex.getMessage(), ex);
         return new ApiError(
                 HttpStatus.BAD_REQUEST.value(),
                 "Invalid request",
-                Arrays.asList(ex.getMessage())
+                Collections.singletonList(ex.getMessage())
         );
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handleAllUncaughtException(Exception ex) {
+    private ApiError handleAllUncaughtException(Exception ex) {
+        log.error(ex.getMessage(), ex);
         return new ApiError(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal server error",
-                Arrays.asList("An unexpected error occurred")
+                List.of("An unexpected error occurred")
         );
     }
 }
