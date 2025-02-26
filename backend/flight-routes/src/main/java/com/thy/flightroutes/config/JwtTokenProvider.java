@@ -1,6 +1,8 @@
 package com.thy.flightroutes.config;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -31,36 +34,40 @@ public class JwtTokenProvider {
     }
 
     public String createToken(String username, String role) {
-        Claims claims = Jwts.claims().setSubject(username);
-        claims.put("role", role);
+        Claims claims = Jwts.claims().subject(username).add("role", role).build();
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
-
+        byte[] bytes = Decoders.BASE64.decode(secretKey);
+        SecretKey key = Keys.hmacShaKeyFor(bytes);
         return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .claims(claims)
+                .issuedAt(now)
+                .expiration(validity)
+                .signWith(key)
                 .compact();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
-            return !claims.getBody().getExpiration().before(new Date());
+            byte[] bytes = Decoders.BASE64.decode(secretKey);
+            SecretKey key = Keys.hmacShaKeyFor(bytes);
+            Claims payload = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+            return !payload.getExpiration().before(new Date());
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
     public Authentication getAuthentication(String token) {
-        Claims claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+        byte[] bytes = Decoders.BASE64.decode(secretKey);
+        SecretKey key = Keys.hmacShaKeyFor(bytes);
+        Claims payload = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
 
-        String role = claims.get("role", String.class);
+        String role = payload.get("role", String.class);
         List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-        return new UsernamePasswordAuthenticationToken(claims.getSubject(), "", authorities);
+        return new UsernamePasswordAuthenticationToken(payload.getSubject(), "", authorities);
     }
 
     public String resolveToken(HttpServletRequest request) {
