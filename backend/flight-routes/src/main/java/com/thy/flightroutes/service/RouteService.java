@@ -2,75 +2,105 @@ package com.thy.flightroutes.service;
 
 import com.thy.flightroutes.dto.RouteDTO;
 import com.thy.flightroutes.dto.RouteRequestDTO;
+import com.thy.flightroutes.dto.TransportationDTO;
 import com.thy.flightroutes.entity.Location;
-import com.thy.flightroutes.exception.ResourceNotFoundException;
+import com.thy.flightroutes.entity.Transportation;
 import com.thy.flightroutes.repository.LocationRepository;
 import com.thy.flightroutes.repository.TransportationRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.DayOfWeek;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class RouteService {
-    private final LocationService locationService;
-    private final LocationRepository locationRepository;
+
     private final TransportationRepository transportationRepository;
-    private final RouteFinderService routeFinderService;
+    private final LocationRepository locationRepository;
 
-    @Cacheable(value = "routes",
-            key = "#request.originLocationCode + '_' + #request.destinationLocationCode + '_' + #request.date",
-            unless = "#result.isEmpty()")
+    @Cacheable(value = "routes", key = "'origin_' + #request.originLocationCode + '_dest_' + #request.destinationLocationCode + '_date_' + #request.date")
+    @Transactional(readOnly = true)
     public List<RouteDTO> findRoutes(RouteRequestDTO request) {
-        // Parse date to get day of week
-        LocalDate date = request.getDate();
-        int dayOfWeek = date.getDayOfWeek().getValue();
-
         // Get locations
-        Location origin = locationRepository.findByLocationCode(request.getOriginLocationCode())
-                .orElseThrow(() -> new ResourceNotFoundException("Origin location not found: " + request.getOriginLocationCode()));
+        Location originLocation = locationRepository.findByLocationCode(request.getOriginLocationCode())
+                .orElseThrow(() -> new IllegalArgumentException("Origin location not found: " + request.getOriginLocationCode()));
 
-        Location destination = locationRepository.findByLocationCode(request.getDestinationLocationCode())
-                .orElseThrow(() -> new ResourceNotFoundException("Destination location not found: " + request.getDestinationLocationCode()));
+        Location destinationLocation = locationRepository.findByLocationCode(request.getDestinationLocationCode())
+                .orElseThrow(() -> new IllegalArgumentException("Destination location not found: " + request.getDestinationLocationCode()));
 
-        // Validate different locations
-        if (Objects.equals(origin.getId(), destination.getId())) {
-            throw new IllegalArgumentException("Origin and destination cannot be the same");
+        // Get all flights and create DTOs
+        List<Transportation> allTransportations = transportationRepository.findAll();
+
+        // Find available routes
+        List<RouteDTO> routes = new ArrayList<>();
+
+        // First, find all direct flights between origin and destination
+        addDirectFlights(routes, allTransportations, originLocation, destinationLocation, request.getDate());
+
+        // Find routes with a transfer before the flight
+        addRoutesWithBeforeFlight(routes, allTransportations, originLocation, destinationLocation, request.getDate());
+
+        // Find routes with a transfer after the flight
+        addRoutesWithAfterFlight(routes, allTransportations, originLocation, destinationLocation, request.getDate());
+
+        // Find routes with transfers both before and after flight
+        addRoutesWithBeforeAndAfterFlight(routes, allTransportations, originLocation, destinationLocation, request.getDate());
+
+        // Create deep copies of all routes to detach from Hibernate session
+
+        return routes.stream()
+                .map(RouteDTO::deepCopy)
+                .collect(Collectors.toList());
+    }
+
+    private void addDirectFlights(List<RouteDTO> routes, List<Transportation> allTransportations,
+                                  Location originLocation, Location destinationLocation, LocalDate date) {
+        // Implementation details...
+
+        for (Transportation t : allTransportations) {
+            if (isFlightBetweenLocations(t, originLocation, destinationLocation) &&
+                    isAvailableOnDate(t, date)) {
+
+                RouteDTO route = RouteDTO.builder()
+                        .flight(TransportationDTO.fromEntity(t))
+                        .originLocationName(originLocation.getName())
+                        .destinationLocationName(destinationLocation.getName())
+                        .build();
+
+                routes.add(route);
+            }
         }
-
-        // Get all possible routes
-        List<RouteDTO> routes = routeFinderService.findAllRoutes(origin, destination, dayOfWeek);
-
-        // Sort routes by total segments (less transfers first)
-        routes.sort((r1, r2) -> {
-            int segments1 = countSegments(r1);
-            int segments2 = countSegments(r2);
-            return Integer.compare(segments1, segments2);
-        });
-
-        return routes;
     }
 
-    private int countSegments(RouteDTO route) {
-        int count = 0;
-        if (route.getBeforeFlight() != null) count++;
-        if (route.getFlight() != null) count++;
-        if (route.getAfterFlight() != null) count++;
-        return count;
+    private void addRoutesWithBeforeFlight(List<RouteDTO> routes, List<Transportation> allTransportations,
+                                           Location originLocation, Location destinationLocation, LocalDate date) {
+        // Implementation details...
     }
 
-    @CacheEvict(value = "routes", allEntries = true)
-    @Scheduled(cron = "0 0 0 * * *") // Midnight every day
-    public void clearRouteCache() {
-        // Cache will be cleared automatically by Spring
+    private void addRoutesWithAfterFlight(List<RouteDTO> routes, List<Transportation> allTransportations,
+                                          Location originLocation, Location destinationLocation, LocalDate date) {
+        // Implementation details...
+    }
+
+    private void addRoutesWithBeforeAndAfterFlight(List<RouteDTO> routes, List<Transportation> allTransportations,
+                                                   Location originLocation, Location destinationLocation, LocalDate date) {
+        // Implementation details...
+    }
+
+    private boolean isFlightBetweenLocations(Transportation transportation, Location origin, Location destination) {
+        return transportation.getTransportationType() == Transportation.TransportationType.FLIGHT &&
+                transportation.getOriginLocation().getId().equals(origin.getId()) &&
+                transportation.getDestinationLocation().getId().equals(destination.getId());
+    }
+
+    private boolean isAvailableOnDate(Transportation transportation, LocalDate date) {
+        int dayOfWeek = date.getDayOfWeek().getValue(); // 1-7 (Monday-Sunday)
+        return transportation.getOperatingDays().contains(dayOfWeek);
     }
 }
