@@ -10,16 +10,16 @@ function TransportationForm({
                                 editingTransportation,
                                 t
                             }) {
-    const transportationTypes = ['FLIGHT', 'BUS', 'SUBWAY', 'UBER'];
+    const transportationTypes = t.transportationTypes;
     const days = [
-        { id: 1, name: 'Pazartesi' },
-        { id: 2, name: 'Salı' },
-        { id: 3, name: 'Çarşamba' },
-        { id: 4, name: 'Perşembe' },
-        { id: 5, name: 'Cuma' },
-        { id: 6, name: 'Cumartesi' },
-        { id: 7, name: 'Pazar' }
-    ];
+        { id: 1, name: t.days[0] },
+        { id: 2, name: t.days[1] },
+        { id: 3, name: t.days[2] },
+        { id: 4, name: t.days[3] },
+        { id: 5, name: t.days[4] },
+        { id: 6, name: t.days[5] },
+        { id: 7, name: t.days[6] }
+      ];
 
     const toggleDay = (dayId) => {
         setFormData(prev => ({

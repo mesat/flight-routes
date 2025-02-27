@@ -12,7 +12,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -32,8 +31,8 @@ public class TransportationService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "transportations",
-            key = "'origin_' + #originLocationId + '_dest_' + #destinationLocationId")
+    //@Cacheable(value = "transportations",
+            //key = "'origin_' + #originLocationId + '_dest_' + #destinationLocationId")
     public List<TransportationDTO> getTransportationsByLocations(Long originLocationId, Long destinationLocationId) {
         Location origin = locationRepository.findById(originLocationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Origin location not found: " + originLocationId));

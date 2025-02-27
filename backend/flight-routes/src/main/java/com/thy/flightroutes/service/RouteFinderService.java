@@ -18,18 +18,35 @@ import java.util.stream.Collectors;
 public class RouteFinderService {
     private final TransportationRepository transportationRepository;
 
+    /**
+     * Bu metod, verilen origin ve destination lokasyonları için,
+     * belirtilen gün (dayOfWeek: 1=Monday ... 7=Sunday) çalışan ulaşım seçeneklerinden,
+     * iş kurallarına uygun geçerli rotaları (zorunlu 1 uçuş, opsiyonel şehir içi transferler) oluşturur.
+     * *
+     * * Kurallar:
+     * - Rota mutlaka 1 adet uçuş (FLIGHT) içermelidir.
+     * - Uçuş dışı transferler (ör. UBER, BUS, SUBWAY vs.) yalnızca şehir içi ulaşım olarak kullanılabilir.
+     * - Farklı şehirler arası (intercity) transferlerde uçuş dışı seçenek kullanılamaz.
+     * - Transfer segmentlerinde, transferin kalkış ve varış lokasyonlarının ait olduğu şehirler,
+     *   ilgili uçuşun kalkış/varış lokasyonlarının şehirleriyle eşleşmelidir.
+     *
+     * @param origin Başlangıç lokasyonu.
+     * @param destination Varış lokasyonu.
+     * @param dayOfWeek Çalışma günü (1-7 arası, örn: 1 = Pazartesi).
+     * @return Uygun rota kombinasyonlarının listesi.
+     */
     public List<RouteDTO> findAllRoutes(Location origin, Location destination, int dayOfWeek) {
         List<RouteDTO> validRoutes = new ArrayList<>();
 
-        // Get all flights for the given day
+        // Öncelikle, belirtilen günde çalışan tüm uçuşları alıyoruz.
         List<Transportation> flights = transportationRepository.findByTransportationType(TransportationType.FLIGHT)
                 .stream()
                 .filter(t -> t.getOperatingDays().contains(dayOfWeek))
-                .collect(Collectors.toList());
+                .toList();
 
-        // For each flight, try to create valid routes
+        // Her uçuş için uygun rota kombinasyonlarını oluşturuyoruz.
         for (Transportation flight : flights) {
-            // Direct flight
+            // 1. Doğrudan uçuş: Uçuş kalkış noktası origin, varış noktası destination.
             if (flight.getOriginLocation().equals(origin) && flight.getDestinationLocation().equals(destination)) {
                 validRoutes.add(new RouteDTO(
                         null,
@@ -41,36 +58,44 @@ public class RouteFinderService {
                 continue;
             }
 
-            // Flight with before/after transfers
+            // 2. Uçuş + Sadece ön transfer:
+            //    Uçuşun varış noktası destination ise, origin'den uçuşun kalkış noktasına giden,
+            //    şehir içi (non-flight) transfer arıyoruz.
+            if (flight.getDestinationLocation().equals(destination)) {
+                List<Transportation> beforeTransfers = findBeforeFlightTransfers(origin, flight, dayOfWeek);
+                beforeTransfers.forEach(beforeTransfer ->
+                        validRoutes.add(new RouteDTO(
+                                mapToDTO(beforeTransfer),
+                                mapToDTO(flight),
+                                null,
+                                origin.getName(),
+                                destination.getName()
+                        ))
+                );
+            }
+
+            // 3. Uçuş + Sadece sonrası transfer:
+            //    Uçuşun kalkış noktası origin ise, uçuşun varış noktasından destination'a giden,
+            //    şehir içi (non-flight) transfer arıyoruz.
             if (flight.getOriginLocation().equals(origin)) {
-                // Try to find after flight transfers
-                findAfterFlightTransfers(flight, destination, dayOfWeek)
-                        .forEach(afterTransfer ->
-                                validRoutes.add(new RouteDTO(
-                                        null,
-                                        mapToDTO(flight),
-                                        mapToDTO(afterTransfer),
-                                        origin.getName(),
-                                        destination.getName()
-                                ))
-                        );
-            } else if (flight.getDestinationLocation().equals(destination)) {
-                // Try to find before flight transfers
-                findBeforeFlightTransfers(origin, flight, dayOfWeek)
-                        .forEach(beforeTransfer ->
-                                validRoutes.add(new RouteDTO(
-                                        mapToDTO(beforeTransfer),
-                                        mapToDTO(flight),
-                                        null,
-                                        origin.getName(),
-                                        destination.getName()
-                                ))
-                        );
-            } else {
-                // Try to find both before and after transfers
+                List<Transportation> afterTransfers = findAfterFlightTransfers(flight, destination, dayOfWeek);
+                afterTransfers.forEach(afterTransfer ->
+                        validRoutes.add(new RouteDTO(
+                                null,
+                                mapToDTO(flight),
+                                mapToDTO(afterTransfer),
+                                origin.getName(),
+                                destination.getName()
+                        ))
+                );
+            }
+
+            // 4. Uçuş + Hem ön hem sonrası transfer:
+            //    Uçuş ne origin ne de destination ile doğrudan eşleşmiyorsa,
+            //    hem origin'den uçuşun kalkış noktasına hem de uçuşun varış noktasından destination'a giden transferleri arıyoruz.
+            if (!flight.getOriginLocation().equals(origin) && !flight.getDestinationLocation().equals(destination)) {
                 List<Transportation> beforeTransfers = findBeforeFlightTransfers(origin, flight, dayOfWeek);
                 List<Transportation> afterTransfers = findAfterFlightTransfers(flight, destination, dayOfWeek);
-
                 for (Transportation before : beforeTransfers) {
                     for (Transportation after : afterTransfers) {
                         validRoutes.add(new RouteDTO(
@@ -88,36 +113,53 @@ public class RouteFinderService {
         return validRoutes;
     }
 
-    private List<Transportation> findBeforeFlightTransfers(
-            Location origin,
-            Transportation flight,
-            int dayOfWeek) {
-        return transportationRepository.findByDestinationLocationAndTransportationType(
-                        flight.getOriginLocation(),
-                        TransportationType.FLIGHT
-                )
+    /**
+     * Origin lokasyonundan başlayıp, uçuşun kalkış noktasına (flight.getOriginLocation()) ulaşan,
+     * uçuş dışı (non-flight) ve şehir içi transferleri bulur.
+     * Karşılaştırma, Location nesnesinin equals metodu yerine, city alanı üzerinden yapılır.
+     *
+     * @param origin Başlangıç lokasyonu.
+     * @param flight Uçuş segmenti.
+     * @param dayOfWeek Çalışma günü.
+     * @return Uygun ön transferler listesi.
+     */
+    private List<Transportation> findBeforeFlightTransfers(Location origin, Transportation flight, int dayOfWeek) {
+        return transportationRepository.findAll()
                 .stream()
-                .filter(t -> t.getOriginLocation().equals(origin))
+                .filter(t -> t.getTransportationType() != TransportationType.FLIGHT) // yalnızca non-flight
                 .filter(t -> t.getOperatingDays().contains(dayOfWeek))
-                .filter(t -> t.getTransportationType() != TransportationType.FLIGHT)
+                // Transferin kalkış lokasyonunun ait olduğu şehir, origin'in şehriyle aynı olmalı.
+                .filter(t -> t.getOriginLocation().getCity().equalsIgnoreCase(origin.getCity()))
+                // Transferin varış lokasyonunun ait olduğu şehir, uçuşun kalkış lokasyonunun şehriyle aynı olmalı.
+                .filter(t -> t.getDestinationLocation().getCity().equalsIgnoreCase(flight.getOriginLocation().getCity()))
                 .collect(Collectors.toList());
     }
 
-    private List<Transportation> findAfterFlightTransfers(
-            Transportation flight,
-            Location destination,
-            int dayOfWeek) {
-        return transportationRepository.findByOriginLocationAndTransportationType(
-                        flight.getDestinationLocation(),
-                        TransportationType.FLIGHT
-                )
+    /**
+     * Uçuşun varış noktasından başlayıp, destination lokasyonuna giden,
+     * uçuş dışı (non-flight) ve şehir içi transferleri bulur.
+     * Karşılaştırma, Location nesnesinin equals metodu yerine, city alanı üzerinden yapılır.
+     *
+     * @param flight Uçuş segmenti.
+     * @param destination Varış lokasyonu.
+     * @param dayOfWeek Çalışma günü.
+     * @return Uygun sonrası transferler listesi.
+     */
+    private List<Transportation> findAfterFlightTransfers(Transportation flight, Location destination, int dayOfWeek) {
+        return transportationRepository.findAll()
                 .stream()
-                .filter(t -> t.getDestinationLocation().equals(destination))
+                .filter(t -> t.getTransportationType() != TransportationType.FLIGHT) // yalnızca non-flight
                 .filter(t -> t.getOperatingDays().contains(dayOfWeek))
-                .filter(t -> t.getTransportationType() != TransportationType.FLIGHT)
+                // Transferin kalkış lokasyonunun ait olduğu şehir, uçuşun varış lokasyonunun şehriyle aynı olmalı.
+                .filter(t -> t.getOriginLocation().getCity().equalsIgnoreCase(flight.getDestinationLocation().getCity()))
+                // Transferin varış lokasyonunun ait olduğu şehir, destination'ın şehriyle aynı olmalı.
+                .filter(t -> t.getDestinationLocation().getCity().equalsIgnoreCase(destination.getCity()))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Transportation entity'sini TransportationDTO'ya çevirir.
+     */
     private TransportationDTO mapToDTO(Transportation transportation) {
         if (transportation == null) return null;
         return new TransportationDTO(

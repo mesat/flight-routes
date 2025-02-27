@@ -18,7 +18,7 @@ function RoutesList({ routes }) {
 
   // Helper to format operating days
   const formatOperatingDays = (days) => {
-    const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+    const dayNames = t.days;
     return days.sort().map(day => dayNames[day - 1]).join(', ');
   };
 
@@ -64,7 +64,7 @@ function RoutesList({ routes }) {
             <div className={route.afterFlight ? "border-b pb-3" : ""}>
               <div className="flex items-center mb-2">
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mr-2 ${getTypeStyle(route.flight.transportationType)}`}>
-                  {t.routes.flight}: {route.flight.transportationType}
+                  {t.routes.travelType}: {route.flight.transportationType}
                 </span>
                 <span className="text-sm text-gray-600">
                   {t.routes.operatingDays}: {formatOperatingDays(route.flight.operatingDays)}

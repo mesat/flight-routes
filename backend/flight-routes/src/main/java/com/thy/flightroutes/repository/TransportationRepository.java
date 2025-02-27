@@ -26,4 +26,5 @@ public interface TransportationRepository extends JpaRepository<Transportation, 
     );
 
     List<Transportation> findByTransportationType(TransportationType type);
+
 }

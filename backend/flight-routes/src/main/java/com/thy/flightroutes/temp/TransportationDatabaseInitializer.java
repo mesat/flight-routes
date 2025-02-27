@@ -43,68 +43,42 @@ public class TransportationDatabaseInitializer implements CommandLineRunner {
                         if (i != j) { // Avoid self-routes
                             Location origin = locations.get(i);
                             Location destination = locations.get(j);
+                            if(origin.getCity().equals(destination.getCity())){
+                                                                                                                                                                                                if(origin.getLocationCode().length() != 3 || destination.getLocationCode().length() != 3){
+                                        Transportation bus = createTransportation(
+                                                origin,
+                                                destination,
+                                                TransportationType.BUS,
+                                                generateDailyOperatingDays() // Buses run daily
+                                        );
+                                        Transportation uber = createTransportation(
+                                                origin,
+                                                destination,
+                                                TransportationType.UBER,
+                                                generateDailyOperatingDays() // Buses run daily
+                                        );
+                                        Transportation subway = createTransportation(
+                                                origin,
+                                                destination,
+                                                TransportationType.SUBWAY,
+                                                generateDailyOperatingDays() // Buses run daily
+                                        );
+                                        transportations.addAll(Arrays.asList(bus, uber, subway));
 
-                            // Create a flight with random operating days
-                            Transportation flight = createTransportation(
-                                    origin,
-                                    destination,
-                                    TransportationType.FLIGHT,
-                                    generateRandomOperatingDays()
-                            );
-
-                            transportations.add(flight);
-                        }
-                    }
-                }
-
-                // Add some other transportation types between nearby locations
-                // For simplicity, we'll define some "nearby" locations based on indices
-                Map<Integer, List<Integer>> nearbyLocations = new HashMap<>();
-                nearbyLocations.put(0, Arrays.asList(1, 2)); // First location is near second and third
-                nearbyLocations.put(3, Arrays.asList(4, 5)); // Fourth location is near fifth and sixth
-                nearbyLocations.put(6, Arrays.asList(7, 8)); // Seventh location is near eighth and ninth
-
-                // Create bus and subway routes between nearby locations
-                for (Map.Entry<Integer, List<Integer>> entry : nearbyLocations.entrySet()) {
-                    int originIndex = entry.getKey();
-                    List<Integer> destinationIndices = entry.getValue();
-
-                    if (originIndex < locations.size()) {
-                        Location origin = locations.get(originIndex);
-
-                        for (int destIndex : destinationIndices) {
-                            if (destIndex < locations.size()) {
-                                Location destination = locations.get(destIndex);
-
-                                // Create a BUS transportation
-                                Transportation bus = createTransportation(
-                                        origin,
-                                        destination,
-                                        TransportationType.BUS,
-                                        generateDailyOperatingDays() // Buses run daily
-                                );
-
-                                // Create a SUBWAY transportation if applicable
-                                if (random.nextBoolean()) {
-                                    Transportation subway = createTransportation(
-                                            origin,
-                                            destination,
-                                            TransportationType.SUBWAY,
-                                            generateDailyOperatingDays() // Subways run daily
-                                    );
-                                    transportations.add(subway);
                                 }
+                            }
+                            //Havayolu
+                            if(origin.getLocationCode().length() == 3 && destination.getLocationCode().length() == 3){
 
-                                transportations.add(bus);
-
-                                // Create reverse route as well
-                                Transportation busReverse = createTransportation(
-                                        destination,
+                                // Create a flight with random operating days
+                                Transportation flight = createTransportation(
                                         origin,
-                                        TransportationType.BUS,
-                                        generateDailyOperatingDays()
+                                        destination,
+                                        TransportationType.FLIGHT,
+                                        generateRandomOperatingDays()
                                 );
-                                transportations.add(busReverse);
+
+                                transportations.add(flight);
                             }
                         }
                     }

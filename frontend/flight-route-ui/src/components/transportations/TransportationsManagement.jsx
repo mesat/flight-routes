@@ -11,7 +11,7 @@ function TransportationsManagement({ t }) {
   const [formData, setFormData] = useState({
     originLocationId: '',
     destinationLocationId: '',
-    transportationType: 'FLIGHT',
+    transportationType: '',
     operatingDays: []
   });
 
@@ -89,7 +89,7 @@ function TransportationsManagement({ t }) {
       setFormData({
         originLocationId: '',
         destinationLocationId: '',
-        transportationType: 'FLIGHT',
+        transportationType: '',
         operatingDays: []
       });
       setEditingTransportation(null);
@@ -136,7 +136,7 @@ function TransportationsManagement({ t }) {
             setFormData({
               originLocationId: '',
               destinationLocationId: '',
-              transportationType: 'FLIGHT',
+              transportationType: '',
               operatingDays: []
             });
             setIsDialogOpen(true);

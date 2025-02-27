@@ -3,60 +3,240 @@
         "name": "Turkish Airlines",
         "country": "Turkey",
         "city": "Istanbul",
-        "locationCode": "TK"
+        "locationCode": "THY"
+    },
+    {
+        "name": "Hagia Sophia",
+        "country": "Turkey",
+        "city": "Istanbul",
+        "locationCode": "HSIA"
+    },
+    {
+        "name": "Topkapi Palace",
+        "country": "Turkey",
+        "city": "Istanbul",
+        "locationCode": "TPKP"
+    },
+    {
+        "name": "Grand Bazaar",
+        "country": "Turkey",
+        "city": "Istanbul",
+        "locationCode": "GRBZ"
+    },
+    {
+        "name": "Galata Tower",
+        "country": "Turkey",
+        "city": "Istanbul",
+        "locationCode": "GALT"
     },
     {
         "name": "Lufthansa",
         "country": "Germany",
         "city": "Cologne",
-        "locationCode": "LH"
+        "locationCode": "DLH"
+    },
+    {
+        "name": "Cologne Cathedral",
+        "country": "Germany",
+        "city": "Cologne",
+        "locationCode": "CCOL"
+    },
+    {
+        "name": "Chocolate Museum",
+        "country": "Germany",
+        "city": "Cologne",
+        "locationCode": "CHMU"
+    },
+    {
+        "name": "Hohenzollern Bridge",
+        "country": "Germany",
+        "city": "Cologne",
+        "locationCode": "HZBR"
+    },
+    {
+        "name": "Museum Ludwig",
+        "country": "Germany",
+        "city": "Cologne",
+        "locationCode": "MLUD"
     },
     {
         "name": "British Airways",
         "country": "United Kingdom",
         "city": "London",
-        "locationCode": "BA"
+        "locationCode": "BAW"
+    },
+    {
+        "name": "Big Ben",
+        "country": "United Kingdom",
+        "city": "London",
+        "locationCode": "BGBN"
+    },
+    {
+        "name": "Tower Bridge",
+        "country": "United Kingdom",
+        "city": "London",
+        "locationCode": "TWBR"
+    },
+    {
+        "name": "Buckingham Palace",
+        "country": "United Kingdom",
+        "city": "London",
+        "locationCode": "BKPL"
+    },
+    {
+        "name": "London Eye",
+        "country": "United Kingdom",
+        "city": "London",
+        "locationCode": "LDEY"
     },
     {
         "name": "Air France",
         "country": "France",
         "city": "Paris",
-        "locationCode": "AF"
+        "locationCode": "AFR"
+    },
+    {
+        "name": "Eiffel Tower",
+        "country": "France",
+        "city": "Paris",
+        "locationCode": "EYFL"
+    },
+    {
+        "name": "Louvre Museum",
+        "country": "France",
+        "city": "Paris",
+        "locationCode": "LVRE"
+    },
+    {
+        "name": "Notre Dame",
+        "country": "France",
+        "city": "Paris",
+        "locationCode": "NDRD"
+    },
+    {
+        "name": "Champs-Élysées",
+        "country": "France",
+        "city": "Paris",
+        "locationCode": "CHPS"
     },
     {
         "name": "Emirates",
         "country": "United Arab Emirates",
         "city": "Dubai",
-        "locationCode": "EK"
+        "locationCode": "UAE"
     },
     {
-        "name": "Delta Air Lines",
-        "country": "United States",
-        "city": "Atlanta",
-        "locationCode": "DL"
+        "name": "Burj Khalifa",
+        "country": "United Arab Emirates",
+        "city": "Dubai",
+        "locationCode": "BRKH"
     },
     {
-        "name": "American Airlines",
-        "country": "United States",
-        "city": "Fort Worth",
-        "locationCode": "AA"
+        "name": "Palm Jumeirah",
+        "country": "United Arab Emirates",
+        "city": "Dubai",
+        "locationCode": "PJMR"
+    },
+    {
+        "name": "Dubai Mall",
+        "country": "United Arab Emirates",
+        "city": "Dubai",
+        "locationCode": "DBML"
+    },
+    {
+        "name": "Dubai Marina",
+        "country": "United Arab Emirates",
+        "city": "Dubai",
+        "locationCode": "DBMR"
     },
     {
         "name": "Qantas",
         "country": "Australia",
         "city": "Sydney",
-        "locationCode": "QF"
+        "locationCode": "QFA"
+    },
+    {
+        "name": "Sydney Opera House",
+        "country": "Australia",
+        "city": "Sydney",
+        "locationCode": "SYOH"
+    },
+    {
+        "name": "Harbour Bridge",
+        "country": "Australia",
+        "city": "Sydney",
+        "locationCode": "HBRG"
+    },
+    {
+        "name": "Bondi Beach",
+        "country": "Australia",
+        "city": "Sydney",
+        "locationCode": "BNDB"
+    },
+    {
+        "name": "Taronga Zoo",
+        "country": "Australia",
+        "city": "Sydney",
+        "locationCode": "TRNZ"
     },
     {
         "name": "Singapore Airlines",
         "country": "Singapore",
         "city": "Singapore",
-        "locationCode": "SQ"
+        "locationCode": "SIA"
+    },
+    {
+        "name": "Marina Bay Sands",
+        "country": "Singapore",
+        "city": "Singapore",
+        "locationCode": "MBSG"
+    },
+    {
+        "name": "Gardens by the Bay",
+        "country": "Singapore",
+        "city": "Singapore",
+        "locationCode": "GBTB"
+    },
+    {
+        "name": "Sentosa Island",
+        "country": "Singapore",
+        "city": "Singapore",
+        "locationCode": "SNTI"
+    },
+    {
+        "name": "Merlion Park",
+        "country": "Singapore",
+        "city": "Singapore",
+        "locationCode": "MRPK"
     },
     {
         "name": "Qatar Airways",
         "country": "Qatar",
         "city": "Doha",
-        "locationCode": "QR"
+        "locationCode": "QTR"
+    },
+    {
+        "name": "The Pearl-Qatar",
+        "country": "Qatar",
+        "city": "Doha",
+        "locationCode": "TPQD"
+    },
+    {
+        "name": "Souq Waqif",
+        "country": "Qatar",
+        "city": "Doha",
+        "locationCode": "SWQF"
+    },
+    {
+        "name": "Museum of Islamic Art",
+        "country": "Qatar",
+        "city": "Doha",
+        "locationCode": "MIAQ"
+    },
+    {
+        "name": "Katara Cultural Village",
+        "country": "Qatar",
+        "city": "Doha",
+        "locationCode": "KCVQ"
     }
 ]

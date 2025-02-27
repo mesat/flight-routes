@@ -68,7 +68,8 @@ const translations = {
             sameLocationError: 'Başlangıç ve varış noktası aynı olamaz',
             transfer: 'Aktarma',
             flight: 'Uçuş',
-            operatingDays: 'Sefer Günleri'
+            operatingDays: 'Sefer Günleri',
+            travelType: 'Uçuş'
         },
         errors: {
             loginFailed: 'Giriş başarısız',
@@ -76,7 +77,22 @@ const translations = {
             deleteFailed: 'Silme işlemi başarısız',
             operationFailed: 'İşlem başarısız',
             searchFailed: 'Arama başarısız'
-        }
+        },
+        transportationTypes: {
+            FLIGHT: 'UÇUŞ',
+            BUS: 'OTOBÜS',
+            SUBWAY: 'METRO',
+            UBER: 'UBER'
+          },
+          days: {
+            1: 'Pazartesi',
+            2: 'Salı',
+            3: 'Çarşamba',
+            4: 'Perşembe',
+            5: 'Cuma',
+            6: 'Cumartesi',
+            7: 'Pazar'
+          }
     },
     en: {
         navigation: {
@@ -147,7 +163,8 @@ const translations = {
             sameLocationError: 'Origin and destination cannot be the same',
             transfer: 'Transfer',
             flight: 'Flight',
-            operatingDays: 'Operating Days'
+            operatingDays: 'Operating Days',
+            travelType: 'Flight'
         },
         errors: {
             loginFailed: 'Login failed',
@@ -155,7 +172,23 @@ const translations = {
             deleteFailed: 'Failed to delete',
             operationFailed: 'Operation failed',
             searchFailed: 'Search failed'
-        }
+        },
+        transportationTypes: {
+            FLIGHT: 'FLIGHT',
+            BUS: 'BUS',
+            SUBWAY: 'SUBWAY',
+            UBER: 'UBER'
+          },
+          days: {
+            1: 'Monday',
+            2: 'Tuesday',
+            3: 'Wednesday',
+            4: 'Thursday',
+            5: 'Friday',
+            6: 'Saturday',
+            7: 'Sunday'
+          }
+        
     }
 };
 
