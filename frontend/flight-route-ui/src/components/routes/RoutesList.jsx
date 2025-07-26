@@ -19,7 +19,7 @@ function RoutesList({ routes }) {
   // Helper to format operating days
   const formatOperatingDays = (days) => {
     const dayNames = t.days;
-    return days.sort().map(day => dayNames[day - 1]).join(', ');
+    return days.sort().map(day => dayNames[day]).join(', ');
   };
 
   return (

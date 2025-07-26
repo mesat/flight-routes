@@ -1,8 +1,12 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { useLanguage } from '../../contexts/LanguageContext';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import DatePicker from "react-datepicker";            // ①
+import { format, parse } from "date-fns";          // ②
+import "@/../node_modules/react-datepicker/dist/react-datepicker.css";
+import "@/setupDatePickerLocale";                     // ③ locale kaydını tek yerde yaptık
+import { useLanguage } from "../../contexts/LanguageContext";
+
 
 function RouteSearchForm({ 
   locations, 
@@ -12,6 +16,9 @@ function RouteSearchForm({
   loading
 }) {
   const { t } = useLanguage();
+    // Yardımcı: string yerine Date nesnesi bekleyen DatePicker’a dönüştür
+  const selectedDate = searchData.date ? searchData.date : null;
+
   
   return (
     <Card className="p-6">
@@ -67,15 +74,21 @@ function RouteSearchForm({
           <div className="space-y-2">
             <label className="text-sm font-medium">
               {t.routes.date}
-            </label>
-            <Input
-              type="date"
-              min={new Date().toISOString().split('T')[0]}
-              value={searchData.date}
-              onChange={(e) => setSearchData(prev => ({
-                ...prev,
-                date: e.target.value
-              }))}
+              </label>
+            <DatePicker
+              locale="tr-monday"                  // ④ Pazartesi sabit
+              selected={selectedDate}
+              onChange={(dt) =>
+                setSearchData((prev) => ({
+                  ...prev,
+                  date: dt ? format(dt, "yyyy-MM-dd") : "",   // ⑤ ISO string
+                }))
+              }
+              minDate={new Date()}
+              dateFormat="yyyy-MM-dd"
+              placeholderText="yyyy-aa-gg"
+              className="w-full rounded-md border border-gray-300 px-3 py-2"
+              calendarStartDay={1}               // ⑥ ≥v5 prop’u; yedek olsun
               required
             />
           </div>
