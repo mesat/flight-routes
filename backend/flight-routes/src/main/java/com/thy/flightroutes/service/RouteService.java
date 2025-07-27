@@ -21,144 +21,187 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RouteService {
 
-    private final TransportationRepository transportationRepository;
-    private final LocationRepository locationRepository;
+  private final TransportationRepository transportationRepository;
+  private final LocationRepository locationRepository;
 
-    @Cacheable(value = "routes", key = "'origin_' + #request.originLocationCode + '_dest_' + #request.destinationLocationCode + '_date_' + #request.date")
-    @Transactional(readOnly = true)
-    public List<RouteDTO> findRoutes(RouteRequestDTO request) {
-        // Lokasyonları bul
-        Location originLocation = locationRepository.findByLocationCode(request.getOriginLocationCode())
-                .orElseThrow(() -> new IllegalArgumentException("Origin location not found: " + request.getOriginLocationCode()));
-        List<Location> originAirports = locationRepository.findByCity(originLocation.getCity())
-                .stream()
+  @Cacheable(
+      value = "routes",
+      key =
+          "'origin_' + #request.originLocationCode + '_dest_' + #request.destinationLocationCode + '_date_' + #request.date")
+  @Transactional(readOnly = true)
+  public List<RouteDTO> findRoutes(RouteRequestDTO request) {
+    // Lokasyonları bul
+    Location originLocation =
+        locationRepository
+            .findByLocationCode(request.getOriginLocationCode())
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Origin location not found: " + request.getOriginLocationCode()));
+    List<Location> originAirports;
+    List<Location> destinationAirports;
+
+    Location destinationLocation =
+        locationRepository
+            .findByLocationCode(request.getDestinationLocationCode())
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Destination location not found: " + request.getDestinationLocationCode()));
+
+    boolean isOriginAnAirport = originLocation.getLocationCode().length() == 3;
+    boolean isDestinationAnAirport = destinationLocation.getLocationCode().length() == 3;
+
+    List<Transportation> before, flights, after;
+
+    originAirports =
+        isOriginAnAirport
+            ? List.of(originLocation)
+            : locationRepository.findByCity(originLocation.getCity()).stream()
+                .filter(location -> location.getLocationCode().length() == 3)
+                .collect(Collectors.toList());
+    destinationAirports =
+        isDestinationAnAirport
+            ? List.of(destinationLocation)
+            : locationRepository.findByCity(destinationLocation.getCity()).stream()
                 .filter(location -> location.getLocationCode().length() == 3)
                 .collect(Collectors.toList());
 
-        Location destinationLocation = locationRepository.findByLocationCode(request.getDestinationLocationCode())
-                .orElseThrow(() -> new IllegalArgumentException("Destination location not found: " + request.getDestinationLocationCode()));
+    // 1) Sadece uçuş içeren (doğrudan uçuş) rota
+    flights = addDirectFlights(originAirports, destinationAirports, request.getDate());
+    List<RouteDTO> routes = new ArrayList<>();
 
-        List<Location> destinationAirports = locationRepository.findByCity(destinationLocation.getCity())
-                .stream()
-                .filter(location -> location.getLocationCode().length() == 3)
-                .collect(Collectors.toList());;
+    // 2) Rota: Uçuş öncesi şehir içi ulaşım -> Uçuş
+    before =
+        addRoutesWithBeforeFlight(originLocation, request.getDate()).stream()
+            .filter(
+                transportation ->
+                    transportation.getDestinationLocation().getLocationCode().length() == 3)
+            .toList();
+    // 3) Rota: Uçuş -> Uçuş sonrası şehir içi ulaşım
+    after =
+        addRoutesWithAfterFlight(destinationLocation, request.getDate()).stream()
+            .filter(
+                transportation ->
+                    transportation.getOriginLocation().getLocationCode().length() == 3)
+            .toList();
+    // 4) Rota: Uçuş öncesi şehir içi ulaşım -> Uçuş -> Uçuş sonrası şehir içi ulaşım
 
-        List<Transportation> before, flight, after;
-
-        // 1) Sadece uçuş içeren (doğrudan uçuş) rota
-        flight = addDirectFlights(originAirports, destinationAirports, request.getDate());
-
-        // 2) Rota: Uçuş öncesi şehir içi ulaşım -> Uçuş
-        before = addRoutesWithBeforeFlight(originLocation, request.getDate());
-        // 3) Rota: Uçuş -> Uçuş sonrası şehir içi ulaşım
-        after = addRoutesWithAfterFlight(destinationLocation, request.getDate());
-        // 4) Rota: Uçuş öncesi şehir içi ulaşım -> Uçuş -> Uçuş sonrası şehir içi ulaşım
-
-        List<RouteDTO> routes = calculateRouteMatrix(originLocation, destinationLocation, before, flight, after);
-        // Hibernate oturumundan bağımsız deep copy’ler oluştur
-        return routes.stream()
-                .map(RouteDTO::deepCopy)
-                .collect(Collectors.toList());
+    for (Transportation flight : flights) {
+      calculateRouteMatrix(
+          routes,
+          originLocation,
+          destinationLocation,
+          before.stream()
+              .filter(b -> b.getDestinationLocation().equals(flight.getOriginLocation()))
+              .toList(),
+          flight,
+          after.stream()
+              .filter(b -> b.getOriginLocation().equals(flight.getDestinationLocation()))
+              .toList());
     }
 
-    /**
-     * Doğrudan uçuşu ekler.
-     * Geçerli: FLIGHT
-     */
-    private List<Transportation> addDirectFlights(List<Location> originLocation, List<Location> destinationLocation, LocalDate date) {
-        return
-                transportationRepository
-                        .findByOriginLocationInAndDestinationLocationInAndTransportationTypeAndOperatingDaysContaining(
-                                originLocation, destinationLocation, Transportation.TransportationType.FLIGHT, date.getDayOfWeek().getValue());
+    // Hibernate oturumundan bağımsız deep copy’ler oluştur
+    return routes.stream().map(RouteDTO::deepCopy).collect(Collectors.toList());
+  }
 
+  /** Doğrudan uçuşu ekler. Geçerli: FLIGHT */
+  private List<Transportation> addDirectFlights(
+      List<Location> originLocation, List<Location> destinationLocation, LocalDate date) {
+    return transportationRepository
+        .findByOriginLocationInAndDestinationLocationInAndTransportationTypeAndOperatingDaysContaining(
+            originLocation,
+            destinationLocation,
+            Transportation.TransportationType.FLIGHT,
+            date.getDayOfWeek().getValue());
+  }
+
+  /**
+   * Rota: [Şehir içi ulaşım] -> [Uçuş] Kurallar: - İlk ulaşım uçuş dışı (ör. UBER, BUS vb.) olmak
+   * zorunda. - Bu ulaşım, başlangıç lokasyonundan hareket etmeli ve aynı şehir içinde kalmalı. -
+   * Ardından, uçuşun kalkış lokasyonu, ilk ulaşımın varış lokasyonuyla (şehir bazında) eşleşmeli ve
+   * uçuş rota hedefi ile bitmelidir.
+   */
+  private List<Transportation> addRoutesWithBeforeFlight(Location originLocation, LocalDate date) {
+    // Şimdi, before ulaşımın varış noktasından kalkacak, route hedefine giden bir uçuş ara
+    if (originLocation.getLocationCode().length() == 3) {
+      return new ArrayList<>();
     }
+    return transportationRepository
+        .findByOriginLocationAndTransportationTypeNotAndOperatingDaysContaining(
+            originLocation,
+            Transportation.TransportationType.FLIGHT,
+            date.getDayOfWeek().getValue());
+  }
 
-    /**
-     * Rota: [Şehir içi ulaşım] -> [Uçuş]
-     * Kurallar:
-     * - İlk ulaşım uçuş dışı (ör. UBER, BUS vb.) olmak zorunda.
-     * - Bu ulaşım, başlangıç lokasyonundan hareket etmeli ve aynı şehir içinde kalmalı.
-     * - Ardından, uçuşun kalkış lokasyonu, ilk ulaşımın varış lokasyonuyla (şehir bazında) eşleşmeli
-     * ve uçuş rota hedefi ile bitmelidir.
-     */
-    private List<Transportation> addRoutesWithBeforeFlight(Location originLocation, LocalDate date) {
-        // Şimdi, before ulaşımın varış noktasından kalkacak, route hedefine giden bir uçuş ara
-        if (originLocation.getLocationCode().length() == 3) {
-            return new ArrayList<>();
-        }
-        return transportationRepository
-                .findByOriginLocationAndTransportationTypeNotAndOperatingDaysContaining(
-                        originLocation, Transportation.TransportationType.FLIGHT, date.getDayOfWeek().getValue());
-
+  /**
+   * Rota: [Uçuş] -> [Şehir içi ulaşım] Kurallar: - İlk aşama uçuş olmalı ve route’un başlangıç
+   * lokasyonundan kalkmalı. - Ardından, uçuşun varış noktasından hareket eden, şehir içi olan bir
+   * ulaşım, uçuşun varış noktasının şehri ile destination'ın şehrinin eşleşmesi şartıyla bulunmalı.
+   */
+  private List<Transportation> addRoutesWithAfterFlight(
+      Location destinationLocation, LocalDate date) {
+    if (destinationLocation.getLocationCode().length() == 3) {
+      return new ArrayList<>();
     }
+    return transportationRepository
+        .findByDestinationLocationAndTransportationTypeNotAndOperatingDaysContaining(
+            destinationLocation,
+            Transportation.TransportationType.FLIGHT,
+            date.getDayOfWeek().getValue());
+  }
 
-    /**
-     * Rota: [Uçuş] -> [Şehir içi ulaşım]
-     * Kurallar:
-     * - İlk aşama uçuş olmalı ve route’un başlangıç lokasyonundan kalkmalı.
-     * - Ardından, uçuşun varış noktasından hareket eden, şehir içi olan bir ulaşım,
-     * uçuşun varış noktasının şehri ile destination'ın şehrinin eşleşmesi şartıyla bulunmalı.
-     */
-    private List<Transportation> addRoutesWithAfterFlight(Location destinationLocation, LocalDate date) {
-        if (destinationLocation.getLocationCode().length() == 3) {
-            return new ArrayList<>();
-        }
-        return transportationRepository
-                .findByDestinationLocationAndTransportationTypeNotAndOperatingDaysContaining(
-                        destinationLocation, Transportation.TransportationType.FLIGHT, date.getDayOfWeek().getValue());
+  /**
+   * Rota: [Şehir içi ulaşım] -> [Uçuş] -> [Şehir içi ulaşım] Kurallar: - İlk adımda, origin'den
+   * intra-city (uçuş öncesi) transfer yapılmalı. - Ardından, ilk transferin varış noktasının şehri
+   * ile eşleşen bir uçuş, route hedefi ile biten segmenti oluşturmalı. - Son adımda, uçuşun varış
+   * noktasından, destination'a giden intra-city transfer eklenmeli.
+   */
+  private void calculateRouteMatrix(
+      List<RouteDTO> routes,
+      Location originLocation,
+      Location destinationLocation,
+      List<Transportation> before,
+      Transportation flight,
+      List<Transportation> after) {
+    int beforeSizeNormalized = Integer.max(before.size(), 1);
+    int afterSizeNormalized = Integer.max(after.size(), 1);
+    int totalSize = beforeSizeNormalized * afterSizeNormalized;
 
+    for (int i = 0; i < totalSize; i++) {
+      RouteDTO.RouteDTOBuilder routeBuilder =
+          RouteDTO.builder()
+              .flight(TransportationDTO.fromEntity(flight))
+              .originLocationName(originLocation.getName())
+              .destinationLocationName(destinationLocation.getName());
+      if (!before.isEmpty()) {
+        routeBuilder.beforeFlight(
+            TransportationDTO.fromEntity(before.get(i % beforeSizeNormalized)));
+      }
+      if (!after.isEmpty()) {
+        routeBuilder.afterFlight(
+            TransportationDTO.fromEntity(after.get((i / beforeSizeNormalized))));
+      }
+      routes.add(routeBuilder.build());
     }
+  }
 
-    /**
-     * Rota: [Şehir içi ulaşım] -> [Uçuş] -> [Şehir içi ulaşım]
-     * Kurallar:
-     * - İlk adımda, origin'den intra-city (uçuş öncesi) transfer yapılmalı.
-     * - Ardından, ilk transferin varış noktasının şehri ile eşleşen bir uçuş,
-     * route hedefi ile biten segmenti oluşturmalı.
-     * - Son adımda, uçuşun varış noktasından, destination'a giden intra-city transfer eklenmeli.
-     */
-    private List<RouteDTO> calculateRouteMatrix(Location originLocation, Location destinationLocation, List<Transportation> before, List<Transportation> flight, List<Transportation> after) {
-        List<RouteDTO> routes = new ArrayList<>();
-        int beforeSizeNormalized = Integer.max(before.size(), 1);
-        int afterSizeNormalized = Integer.max(after.size(), 1);
-        int totalSize =  beforeSizeNormalized * flight.size() * afterSizeNormalized;
-        int beforeSlice = flight.size() * afterSizeNormalized;
-        int afterSlice = beforeSizeNormalized * flight.size();
-        int flightSlice = beforeSizeNormalized * afterSizeNormalized;
+  /**
+   * Kontrol: Ulaşım tipi FLIGHT olup, kalkış ve varış lokasyonları route gereksinimine uygun mu?
+   */
+  private boolean isFlightBetweenLocations(
+      Transportation transportation, Location origin, Location destination) {
+    return transportation.getTransportationType() == Transportation.TransportationType.FLIGHT
+        && transportation.getOriginLocation().getId().equals(origin.getId())
+        && transportation.getDestinationLocation().getId().equals(destination.getId());
+  }
 
-        for (int i = 0; i < totalSize; i++) {
-            RouteDTO.RouteDTOBuilder routeBuilder = RouteDTO.builder()
-                    .flight(TransportationDTO.fromEntity(flight.get(i / flightSlice)))
-                    .originLocationName(originLocation.getName())
-                    .destinationLocationName(destinationLocation.getName());
-            if (!before.isEmpty()) {
-                routeBuilder.beforeFlight(TransportationDTO.fromEntity(before.get(i / beforeSlice)));
-
-            }
-            if (!after.isEmpty()) {
-                routeBuilder.afterFlight(TransportationDTO.fromEntity(after.get(i / afterSlice)));
-
-            }
-            routes.add(routeBuilder.build());
-        }
-        return routes;
-    }
-
-    /**
-     * Kontrol: Ulaşım tipi FLIGHT olup, kalkış ve varış lokasyonları route gereksinimine uygun mu?
-     */
-    private boolean isFlightBetweenLocations(Transportation transportation, Location origin, Location destination) {
-        return transportation.getTransportationType() == Transportation.TransportationType.FLIGHT &&
-                transportation.getOriginLocation().getId().equals(origin.getId()) &&
-                transportation.getDestinationLocation().getId().equals(destination.getId());
-    }
-
-    /**
-     * Ulaşımın, verilen tarihte işletim günleri içerisinde olup olmadığını kontrol eder.
-     * (Örn: operatingDays bir Set<Integer> olup, Pazartesi=1 ... Pazar=7 şeklinde tanımlanmıştır)
-     */
-    private boolean isAvailableOnDate(Transportation transportation, LocalDate date) {
-        int dayOfWeek = date.getDayOfWeek().getValue(); // 1-7 (Monday-Sunday)
-        return transportation.getOperatingDays().contains(dayOfWeek);
-    }
+  /**
+   * Ulaşımın, verilen tarihte işletim günleri içerisinde olup olmadığını kontrol eder. (Örn:
+   * operatingDays bir Set<Integer> olup, Pazartesi=1 ... Pazar=7 şeklinde tanımlanmıştır)
+   */
+  private boolean isAvailableOnDate(Transportation transportation, LocalDate date) {
+    int dayOfWeek = date.getDayOfWeek().getValue(); // 1-7 (Monday-Sunday)
+    return transportation.getOperatingDays().contains(dayOfWeek);
+  }
 }
