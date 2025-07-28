@@ -17,7 +17,10 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class LocationService {
+
   private final LocationRepository locationRepository;
+
+  /* ---------- READ OPERATIONS ---------- */
 
   @Cacheable(value = "locations", key = "'all'", unless = "#result == null || #result.isEmpty()")
   public List<LocationDTO> getAllLocations() {
@@ -31,11 +34,14 @@ public class LocationService {
             .findByLocationCode(code)
             .orElseThrow(
                 () -> new ResourceNotFoundException("Location not found with code: " + code));
-
     return toDTO(location);
   }
 
-  @CacheEvict(value = "locations", allEntries = true)
+  /* ---------- WRITE OPERATIONS ---------- */
+
+  @CacheEvict(
+      value = {"locations", "routes"},
+      allEntries = true)
   public LocationDTO createLocation(LocationDTO locationDTO) {
     validateLocationCode(locationDTO.getLocationCode());
 
@@ -49,7 +55,10 @@ public class LocationService {
     return toDTO(location);
   }
 
-  @CacheEvict(value = "locations", allEntries = true)
+  // <---------- Güncellediğimiz satır
+  @CacheEvict(
+      value = {"locations", "routes"},
+      allEntries = true)
   public LocationDTO updateLocation(Long id, LocationDTO locationDTO) {
     Location location =
         locationRepository
@@ -79,23 +88,23 @@ public class LocationService {
     locationRepository.deleteById(id);
   }
 
+  /* ---------- HELPER METHODS ---------- */
+
   private void validateLocationCode(String code) {
     if (locationRepository.findByLocationCode(code).isPresent()) {
       throw new IllegalArgumentException("Location code already exists: " + code);
     }
-
     if (!code.matches("^([A-Z]{3}|CC[A-Z]{2,4})$")) {
-      throw new IllegalArgumentException("Invalid location code format");
+      throw new IllegalArgumentException("Invalid location code format: " + code);
     }
   }
 
   private LocationDTO toDTO(Location location) {
-    LocationDTO dto = new LocationDTO();
-    dto.setId(location.getId());
-    dto.setName(location.getName());
-    dto.setCountry(location.getCountry());
-    dto.setCity(location.getCity());
-    dto.setLocationCode(location.getLocationCode());
-    return dto;
+    return new LocationDTO(
+        location.getId(),
+        location.getName(),
+        location.getCountry(),
+        location.getCity(),
+        location.getLocationCode());
   }
 }
