@@ -1,12 +1,17 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import DatePicker from "react-datepicker";            // ①
-import { format, parse } from "date-fns";          // ②
-import "@/../node_modules/react-datepicker/dist/react-datepicker.css";
-import "@/setupDatePickerLocale";                     // ③ locale kaydını tek yerde yaptık
-import { useLanguage } from "../../contexts/LanguageContext";
+import DatePicker from "react-datepicker"; // DatePicker bileşeni
+import { format } from "date-fns"; // Tarih formatlama
+import "@/../node_modules/react-datepicker/dist/react-datepicker.css"; // DatePicker CSS
+import { useLanguage } from "../../contexts/LanguageContext"; // Dil bilgisi için hook
 
+// Locale ayarları
+import { registerLocale } from "react-datepicker";
+import tr from "date-fns/locale/tr";
+import enUS from "date-fns/locale/en-US";
+registerLocale("tr", tr);
+registerLocale("en", enUS);
 
 function RouteSearchForm({ 
   locations, 
@@ -15,11 +20,11 @@ function RouteSearchForm({
   onSearch,
   loading
 }) {
-  const { t } = useLanguage();
-    // Yardımcı: string yerine Date nesnesi bekleyen DatePicker’a dönüştür
+  const { t, language } = useLanguage(); // Dil bilgisi (language: 'tr' veya 'en')
+
+  // Yardımcı: string yerine Date nesnesi bekleyen DatePicker’a dönüştür
   const selectedDate = searchData.date ? searchData.date : null;
 
-  
   return (
     <Card className="p-6">
       <form onSubmit={(e) => {
@@ -72,25 +77,27 @@ function RouteSearchForm({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <label className="text-sm font-medium"> {}
               {t.routes.date}
-              </label>
+            </label>
+            <div>
             <DatePicker
-              locale="tr-monday"                  // ④ Pazartesi sabit
+              locale={language === "tr" ? "tr" : "en"} // Dil ayarına göre locale
               selected={selectedDate}
               onChange={(dt) =>
                 setSearchData((prev) => ({
                   ...prev,
-                  date: dt ? format(dt, "yyyy-MM-dd") : "",   // ⑤ ISO string
+                  date: dt ? format(dt, "yyyy-MM-dd") : "", // ISO string formatı
                 }))
               }
               minDate={new Date()}
               dateFormat="yyyy-MM-dd"
               placeholderText="yyyy-aa-gg"
-              className="w-full rounded-md border border-gray-300 px-3 py-2"
-              calendarStartDay={1}               // ⑥ ≥v5 prop’u; yedek olsun
+              className="w-full rounded-md border border-gray-300 px-3 py-2" 
+              calendarStartDay={1} // Pazartesi başlangıcı
               required
             />
+            </div>
           </div>
 
           <div className="flex items-end">
