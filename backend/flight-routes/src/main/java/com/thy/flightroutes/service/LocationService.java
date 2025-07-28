@@ -17,80 +17,85 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class LocationService {
-    private final LocationRepository locationRepository;
+  private final LocationRepository locationRepository;
 
-    @Cacheable(value = "locations", key = "'all'", unless = "#result == null || #result.isEmpty()")
-    public List<LocationDTO> getAllLocations() {
-        return locationRepository.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+  @Cacheable(value = "locations", key = "'all'", unless = "#result == null || #result.isEmpty()")
+  public List<LocationDTO> getAllLocations() {
+    return locationRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+  }
 
-    }
-    @Cacheable(value = "locations", key = "#code")
-    public LocationDTO getLocationByCode(String code) {
-        Location location = locationRepository.findByLocationCode(code)
-                .orElseThrow(() -> new ResourceNotFoundException("Location not found with code: " + code));
+  @Cacheable(value = "locations", key = "#code")
+  public LocationDTO getLocationByCode(String code) {
+    Location location =
+        locationRepository
+            .findByLocationCode(code)
+            .orElseThrow(
+                () -> new ResourceNotFoundException("Location not found with code: " + code));
 
-        return toDTO(location);
-    }
+    return toDTO(location);
+  }
 
-    @CacheEvict(value = "locations", allEntries = true)
-    public LocationDTO createLocation(LocationDTO locationDTO) {
-        validateLocationCode(locationDTO.getLocationCode());
+  @CacheEvict(value = "locations", allEntries = true)
+  public LocationDTO createLocation(LocationDTO locationDTO) {
+    validateLocationCode(locationDTO.getLocationCode());
 
-        Location location = new Location();
-        location.setName(locationDTO.getName());
-        location.setCountry(locationDTO.getCountry());
-        location.setCity(locationDTO.getCity());
-        location.setLocationCode(locationDTO.getLocationCode());
+    Location location = new Location();
+    location.setName(locationDTO.getName());
+    location.setCountry(locationDTO.getCountry());
+    location.setCity(locationDTO.getCity());
+    location.setLocationCode(locationDTO.getLocationCode());
 
-        location = locationRepository.save(location);
-        return toDTO(location);
-    }
+    location = locationRepository.save(location);
+    return toDTO(location);
+  }
 
-    @CacheEvict(value = "locations", allEntries = true)
-    public LocationDTO updateLocation(Long id, LocationDTO locationDTO) {
-        Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Location not found"));
+  @CacheEvict(value = "locations", allEntries = true)
+  public LocationDTO updateLocation(Long id, LocationDTO locationDTO) {
+    Location location =
+        locationRepository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Location not found"));
 
-        if (!location.getLocationCode().equals(locationDTO.getLocationCode())) {
-            validateLocationCode(locationDTO.getLocationCode());
-        }
-
-        location.setName(locationDTO.getName());
-        location.setCountry(locationDTO.getCountry());
-        location.setCity(locationDTO.getCity());
-        location.setLocationCode(locationDTO.getLocationCode());
-
-        location = locationRepository.save(location);
-        return toDTO(location);
+    if (!location.getLocationCode().equals(locationDTO.getLocationCode())) {
+      validateLocationCode(locationDTO.getLocationCode());
     }
 
-    @CacheEvict(value = {"locations", "routes"}, allEntries = true)
-    public void deleteLocation(Long id) {
-        if (!locationRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Location not found");
-        }
-        locationRepository.deleteById(id);
+    location.setName(locationDTO.getName());
+    location.setCountry(locationDTO.getCountry());
+    location.setCity(locationDTO.getCity());
+    location.setLocationCode(locationDTO.getLocationCode());
+
+    location = locationRepository.save(location);
+    return toDTO(location);
+  }
+
+  @CacheEvict(
+      value = {"locations", "routes"},
+      allEntries = true)
+  public void deleteLocation(Long id) {
+    if (!locationRepository.existsById(id)) {
+      throw new ResourceNotFoundException("Location not found");
+    }
+    locationRepository.deleteById(id);
+  }
+
+  private void validateLocationCode(String code) {
+    if (locationRepository.findByLocationCode(code).isPresent()) {
+      throw new IllegalArgumentException("Location code already exists: " + code);
     }
 
-    private void validateLocationCode(String code) {
-        if (locationRepository.findByLocationCode(code).isPresent()) {
-            throw new IllegalArgumentException("Location code already exists: " + code);
-        }
-
-        if (!code.matches("^([A-Z]{3}|CC[A-Z]{2,4})$")) {
-            throw new IllegalArgumentException("Invalid location code format");
-        }
+    if (!code.matches("^([A-Z]{3}|CC[A-Z]{2,4})$")) {
+      throw new IllegalArgumentException("Invalid location code format");
     }
+  }
 
-    private LocationDTO toDTO(Location location) {
-        LocationDTO dto = new LocationDTO();
-        dto.setId(location.getId());
-        dto.setName(location.getName());
-        dto.setCountry(location.getCountry());
-        dto.setCity(location.getCity());
-        dto.setLocationCode(location.getLocationCode());
-        return dto;
-    }
+  private LocationDTO toDTO(Location location) {
+    LocationDTO dto = new LocationDTO();
+    dto.setId(location.getId());
+    dto.setName(location.getName());
+    dto.setCountry(location.getCountry());
+    dto.setCity(location.getCity());
+    dto.setLocationCode(location.getLocationCode());
+    return dto;
+  }
 }
