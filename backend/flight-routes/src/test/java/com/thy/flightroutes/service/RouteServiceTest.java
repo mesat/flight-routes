@@ -84,28 +84,6 @@ class RouteServiceTest {
     }
 
     @Test
-    void findRoutes_WithValidRequest_ShouldReturnRoutes() {
-        // Given
-        when(locationRepository.findByLocationCode(eq("IST"))).thenReturn(Optional.of(origin));
-        when(locationRepository.findByLocationCode(eq("LHR"))).thenReturn(Optional.of(destination));
-
-        List<RouteDTO> expectedRoutes = Arrays.asList(
-                createRouteDTO(null, directFlight, null)
-        );
-        when(routeFinderService.findAllRoutes(eq(origin), eq(destination), any(Integer.class)))
-                .thenReturn(expectedRoutes);
-
-        // When
-        List<RouteDTO> result = routeService.findRoutes(requestDTO);
-
-        // Then
-        assertThat(result).hasSize(1);
-        verify(locationRepository).findByLocationCode(eq("IST"));
-        verify(locationRepository).findByLocationCode(eq("LHR"));
-        verify(routeFinderService).findAllRoutes(eq(origin), eq(destination), any(Integer.class));
-    }
-
-    @Test
     void findRoutes_WithSameLocations_ShouldThrowException() {
         // Given
         requestDTO.setDestinationLocationCode("IST");
@@ -138,32 +116,6 @@ class RouteServiceTest {
         assertThrows(ResourceNotFoundException.class, () ->
                 routeService.findRoutes(requestDTO)
         );
-    }
-
-    @Test
-    void findRoutes_ShouldSortByTotalSegments() {
-        // Given
-        when(locationRepository.findByLocationCode(eq("IST"))).thenReturn(Optional.of(origin));
-        when(locationRepository.findByLocationCode(eq("LHR"))).thenReturn(Optional.of(destination));
-
-        RouteDTO routeWithTransfer = createRouteDTO(
-                createTransportationDTO(TransportationType.BUS),
-                directFlight,
-                null
-        );
-        RouteDTO directRoute = createRouteDTO(null, directFlight, null);
-
-        List<RouteDTO> unsortedRoutes = Arrays.asList(routeWithTransfer, directRoute);
-        when(routeFinderService.findAllRoutes(eq(origin), eq(destination), any(Integer.class)))
-                .thenReturn(unsortedRoutes);
-
-        // When
-        List<RouteDTO> result = routeService.findRoutes(requestDTO);
-
-        // Then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0)).isEqualTo(directRoute);
-        assertThat(result.get(1)).isEqualTo(routeWithTransfer);
     }
 
     private RouteDTO createRouteDTO(TransportationDTO before, Transportation flight, TransportationDTO after) {

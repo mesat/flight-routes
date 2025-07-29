@@ -113,6 +113,8 @@ class TransportationServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getTransportationType()).isEqualTo(TransportationType.FLIGHT);
+        assertThat(result.getOriginLocationId()).isEqualTo(1L);
+        assertThat(result.getDestinationLocationId()).isEqualTo(2L);
         verify(locationRepository).findById(1L);
         verify(locationRepository).findById(2L);
         verify(transportationRepository).save(any(Transportation.class));

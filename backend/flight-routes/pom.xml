@@ -28,6 +28,8 @@
     </scm>
     <properties>
         <java.version>23</java.version>
+        <db.username>${env.SPRING_DATASOURCE_USERNAME}</db.username>
+        <db.password>${env.SPRING_DATASOURCE_PASSWORD}</db.password>
     </properties>
     <dependencies>
         <dependency>
@@ -158,8 +160,8 @@
                 <configuration>
                     <changeLogFile>src/main/resources/db/changelog/db.changelog-master.yaml</changeLogFile>
                     <url>jdbc:postgresql://localhost:5432/flightroutes</url>
-                    <username>${env.spring.datasource.username}</username>
-                    <password>${env.spring.datasource.password}</password>
+                    <username>${db.username}</username>
+                    <password>${db.password}</password>
                 </configuration>
             </plugin>
         </plugins>

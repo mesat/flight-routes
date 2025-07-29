@@ -28,7 +28,7 @@ public interface TransportationRepository extends JpaRepository<Transportation, 
             Location originLocation, TransportationType transportationType, Integer operatingDays
     );
     List<Transportation> findByDestinationLocationAndTransportationTypeNotAndOperatingDaysContaining(
-            Location originLocation, TransportationType transportationType, Integer operatingDays
+            Location destinationLocation, TransportationType transportationType, Integer operatingDays
     );
 
     List<Transportation> findByDestinationLocationAndTransportationType(
