@@ -49,6 +49,10 @@ public class RouteService {
                     new IllegalArgumentException(
                         "Destination location not found: " + request.getDestinationLocationCode()));
 
+    if (originLocation.getLocationCode().equalsIgnoreCase(destinationLocation.getLocationCode())) {
+      throw new IllegalArgumentException("Origin and destination cannot be the same");
+    }
+
     boolean isOriginAnAirport = originLocation.getLocationCode().length() == 3;
     boolean isDestinationAnAirport = destinationLocation.getLocationCode().length() == 3;
 
