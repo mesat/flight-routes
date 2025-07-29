@@ -1,0 +1,118 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1753731067330-1
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: locations_pkey
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: city
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: country
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: location_code
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(255)
+            tableName: locations
+  - changeSet:
+      id: 1753731067330-2
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  name: operating_days
+                  type: INT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: transportation_id
+                  type: BIGINT
+            tableName: transportation_operating_days
+  - changeSet:
+      id: 1753731067330-3
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                  name: destination_location_id
+                  type: BIGINT
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: transportations_pkey
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: origin_location_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: transportation_type
+                  type: VARCHAR(255)
+            tableName: transportations
+  - changeSet:
+      id: 1753731067330-4
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addPrimaryKey:
+            columnNames: id
+            constraintName: user_pkey
+            tableName: user
+  - changeSet:
+      id: 1753731067330-5
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: location_code
+            indexName: locations_location_code_key
+            tableName: locations
+            unique: true
+  - changeSet:
+      id: 1753731067330-6
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createIndex:
+            columns:
+              - column:
+                  name: username
+            indexName: user_username_key
+            tableName: user
+            unique: true
+
