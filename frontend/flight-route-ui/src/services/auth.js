@@ -17,40 +17,33 @@ function parseJwt(token) {
 // Login
 export const login = async (username, password) => {
   try {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Login failed');
-    }
-
-    const { token } = await response.json();
+    const response = await api.post('/api/auth/login', { username, password });
 
     // ⬇️ userType'ı JWT payload'ından oku (role claim)
-    const { role } = parseJwt(token);
+    const { role } = parseJwt(response.token);
     const userType = role || 'AGENCY'; // default — istersen boş bırak
 
-    localStorage.setItem('token', token);
+    localStorage.setItem('token', response.token);
     localStorage.setItem('userType', userType);
 
-    return { token, userType };
+    return { token: response.token, userType };
   } catch (error) {
     console.error('Login error:', error);
     throw error;
   }
 };
 
-// Token doğrulama (korunan bir endpointe ping atar)
+// Token doğrulama (basit kontrol)
 export const validateToken = async (token) => {
   try {
-    const resp = await fetch('/api/locations', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    return resp.ok;
+    // Token'ın varlığını kontrol et
+    if (!token) {
+      return false;
+    }
+    
+    // Token'ın geçerliliğini kontrol et (opsiyonel)
+    const response = await api.get('/api/locations');
+    return response.ok;
   } catch (e) {
     console.error('Token validation error:', e);
     return false;

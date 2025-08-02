@@ -1,4 +1,13 @@
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 function TransportationForm({
                                 isOpen,
@@ -10,15 +19,15 @@ function TransportationForm({
                                 editingTransportation,
                                 t
                             }) {
-    const transportationTypes = t.transportationTypes;
+    const transportationTypes = ['FLIGHT', 'BUS', 'SUBWAY', 'UBER'];
     const days = [
-        { id: 1, name: t.days[0] },
-        { id: 2, name: t.days[1] },
-        { id: 3, name: t.days[2] },
-        { id: 4, name: t.days[3] },
-        { id: 5, name: t.days[4] },
-        { id: 6, name: t.days[5] },
-        { id: 7, name: t.days[6] }
+        { id: 1, name: t.days[1] },
+        { id: 2, name: t.days[2] },
+        { id: 3, name: t.days[3] },
+        { id: 4, name: t.days[4] },
+        { id: 5, name: t.days[5] },
+        { id: 6, name: t.days[6] },
+        { id: 7, name: t.days[7] }
       ];
 
     const toggleDay = (dayId) => {
@@ -32,18 +41,24 @@ function TransportationForm({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px] bg-white">
                 <DialogHeader>
                     <DialogTitle>
                         {editingTransportation ? t.transportations.editTransportation : t.transportations.addTransportation}
                     </DialogTitle>
+                    <DialogDescription>
+                        {editingTransportation ? t.transportations.editTransportationDesc : t.transportations.addTransportationDesc}
+                    </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={onSubmit}>
+                <form onSubmit={(e) => {
+                    e.preventDefault();
+                    onSubmit(formData);
+                }}>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium">{t.transportations.from}</label>
                             <select
-                                value={formData.originLocationId}
+                                value={formData.originLocationId || ''}
                                 onChange={(e) => setFormData(prev => ({
                                     ...prev,
                                     originLocationId: e.target.value
@@ -52,7 +67,7 @@ function TransportationForm({
                                 className="w-full rounded-md border border-gray-300 px-3 py-2"
                             >
                                 <option value="">{t.transportations.selectLocation}</option>
-                                {locations.map(location => (
+                                {locations && locations.map(location => (
                                     <option key={location.id} value={location.id}>
                                         {location.name} ({location.locationCode})
                                     </option>
@@ -63,7 +78,7 @@ function TransportationForm({
                         <div className="space-y-2">
                             <label className="text-sm font-medium">{t.transportations.to}</label>
                             <select
-                                value={formData.destinationLocationId}
+                                value={formData.destinationLocationId || ''}
                                 onChange={(e) => setFormData(prev => ({
                                     ...prev,
                                     destinationLocationId: e.target.value
@@ -72,7 +87,7 @@ function TransportationForm({
                                 className="w-full rounded-md border border-gray-300 px-3 py-2"
                             >
                                 <option value="">{t.transportations.selectLocation}</option>
-                                {locations.map(location => (
+                                {locations && locations.map(location => (
                                     <option key={location.id} value={location.id}>
                                         {location.name} ({location.locationCode})
                                     </option>
@@ -94,7 +109,7 @@ function TransportationForm({
                                                 : 'bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200'
                                         }`}
                                     >
-                                        {type}
+                                        {t.transportationTypes[type]}
                                     </button>
                                 ))}
                             </div>
@@ -109,7 +124,7 @@ function TransportationForm({
                                         type="button"
                                         onClick={() => toggleDay(day.id)}
                                         className={`p-2 text-center text-sm rounded-md ${
-                                            formData.operatingDays.includes(day.id)
+                                            formData.operatingDays && formData.operatingDays.includes(day.id)
                                                 ? 'bg-blue-100 text-blue-800 border-2 border-blue-500'
                                                 : 'bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200'
                                         }`}
@@ -118,7 +133,7 @@ function TransportationForm({
                                     </button>
                                 ))}
                             </div>
-                            {formData.operatingDays.length === 0 && (
+                            {(!formData.operatingDays || formData.operatingDays.length === 0) && (
                                 <p className="text-sm text-red-500">
                                     {t.transportations.selectDays}
                                 </p>
@@ -126,21 +141,23 @@ function TransportationForm({
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={onClose}
+                            className="w-20"
                         >
-                            {t.transportations.cancel}
+                            {t.common.cancel}
                         </Button>
                         <Button
                             type="submit"
-                            disabled={formData.operatingDays.length === 0}
+                            disabled={!formData.operatingDays || formData.operatingDays.length === 0}
+                            className="w-20"
                         >
-                            {editingTransportation ? t.transportations.update : t.transportations.create}
+                            {editingTransportation ? t.common.update : t.common.create}
                         </Button>
-                    </DialogFooter>
+                    </div>
                 </form>
             </DialogContent>
         </Dialog>

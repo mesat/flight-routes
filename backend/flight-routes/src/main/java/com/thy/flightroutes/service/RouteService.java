@@ -106,8 +106,65 @@ public class RouteService {
               .toList());
     }
 
-    // Hibernate oturumundan bağımsız deep copy’ler oluştur
+    // Hibernate oturumundan bağımsız deep copy'ler oluştur
     return routes.stream().map(RouteDTO::deepCopy).collect(Collectors.toList());
+  }
+
+  /**
+   * Belirtilen tarihte rota bulunamadığında, alternatif günlerde seferler olup olmadığını kontrol eder.
+   */
+  @Transactional(readOnly = true)
+  public List<Integer> findAlternativeDays(RouteRequestDTO request) {
+    // Lokasyonları bul
+    Location originLocation =
+        locationRepository
+            .findByLocationCode(request.getOriginLocationCode())
+            .orElseThrow(
+                () ->
+                    new ResourceNotFoundException(
+                        "Origin location not found: " + request.getOriginLocationCode()));
+
+    Location destinationLocation =
+        locationRepository
+            .findByLocationCode(request.getDestinationLocationCode())
+            .orElseThrow(
+                () ->
+                    new ResourceNotFoundException(
+                        "Destination location not found: " + request.getDestinationLocationCode()));
+
+    if (originLocation.getLocationCode().equalsIgnoreCase(destinationLocation.getLocationCode())) {
+      return new ArrayList<>();
+    }
+
+    boolean isOriginAnAirport = originLocation.getLocationCode().length() == 3;
+    boolean isDestinationAnAirport = destinationLocation.getLocationCode().length() == 3;
+
+    List<Location> originAirports =
+        isOriginAnAirport
+            ? List.of(originLocation)
+            : locationRepository.findByCity(originLocation.getCity()).stream()
+                .filter(location -> location.getLocationCode().length() == 3)
+                .collect(Collectors.toList());
+    List<Location> destinationAirports =
+        isDestinationAnAirport
+            ? List.of(destinationLocation)
+            : locationRepository.findByCity(destinationLocation.getCity()).stream()
+                .filter(location -> location.getLocationCode().length() == 3)
+                .collect(Collectors.toList());
+
+    // Yeni sorgu ile operating days'leri al
+    List<Integer> availableDays = transportationRepository
+        .findOperatingDaysByOriginLocationsAndDestinationLocationsAndTransportationType(
+            originAirports,
+            destinationAirports,
+            Transportation.TransportationType.FLIGHT
+        );
+
+    // İstenen günü çıkar
+    int requestedDay = request.getDate().getDayOfWeek().getValue();
+    availableDays.remove(Integer.valueOf(requestedDay));
+
+    return availableDays;
   }
 
   /** Doğrudan uçuşu ekler. Geçerli: FLIGHT */
@@ -189,24 +246,5 @@ public class RouteService {
       }
       routes.add(routeBuilder.build());
     }
-  }
-
-  /**
-   * Kontrol: Ulaşım tipi FLIGHT olup, kalkış ve varış lokasyonları route gereksinimine uygun mu?
-   */
-  private boolean isFlightBetweenLocations(
-      Transportation transportation, Location origin, Location destination) {
-    return transportation.getTransportationType() == Transportation.TransportationType.FLIGHT
-        && transportation.getOriginLocation().getId().equals(origin.getId())
-        && transportation.getDestinationLocation().getId().equals(destination.getId());
-  }
-
-  /**
-   * Ulaşımın, verilen tarihte işletim günleri içerisinde olup olmadığını kontrol eder. (Örn:
-   * operatingDays bir Set<Integer> olup, Pazartesi=1 ... Pazar=7 şeklinde tanımlanmıştır)
-   */
-  private boolean isAvailableOnDate(Transportation transportation, LocalDate date) {
-    int dayOfWeek = date.getDayOfWeek().getValue(); // 1-7 (Monday-Sunday)
-    return transportation.getOperatingDays().contains(dayOfWeek);
   }
 }

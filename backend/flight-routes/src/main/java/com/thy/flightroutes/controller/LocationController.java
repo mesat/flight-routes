@@ -1,6 +1,7 @@
 package com.thy.flightroutes.controller;
 
 import com.thy.flightroutes.dto.LocationDTO;
+import com.thy.flightroutes.dto.PageResponseDTO;
 import com.thy.flightroutes.service.LocationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,7 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @RestController
 @RequestMapping("/api/locations")
@@ -24,15 +26,20 @@ public class LocationController {
     private final LocationService locationService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get all locations", description = "Returns a list of all locations in the system")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENCY')")
+    @Operation(summary = "Get all locations", description = "Returns a paginated list of all locations in the system")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved locations"),
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved locations",
+                    content = @Content(schema = @Schema(implementation = PageResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized - JWT token is missing or invalid"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - User does not have admin role")
+            @ApiResponse(responseCode = "403", description = "Forbidden - User does not have required role")
     })
-    public List<LocationDTO> getAllLocations() {
-        return locationService.getAllLocations();
+    public PageResponseDTO<LocationDTO> getAllLocations(
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+        return locationService.getAllLocations(page, size);
     }
 
     @PostMapping

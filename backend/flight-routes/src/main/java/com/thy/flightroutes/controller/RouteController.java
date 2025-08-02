@@ -48,6 +48,26 @@ public class RouteController {
         return ResponseEntity.ok(routes);
     }
 
+    @PostMapping("/alternative-days")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENCY')")
+    @Operation(
+            summary = "Get alternative days",
+            description = "Get alternative days when routes are available for the same route"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved alternative days",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Integer.class)))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Location not found")
+    })
+    public ResponseEntity<List<Integer>> getAlternativeDays(
+            @Parameter(description = "Route search criteria", required = true)
+            @Valid @RequestBody RouteRequestDTO request) {
+        List<Integer> alternativeDays = routeService.findAlternativeDays(request);
+        return ResponseEntity.ok(alternativeDays);
+    }
+
     @Schema(description = "Sample request body for route search")
     public static class RouteSearchExample {
         @Schema(

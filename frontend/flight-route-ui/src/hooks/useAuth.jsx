@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { login as apiLogin, validateToken, logout as apiLogout } from '../services/auth';
+import { login as apiLogin, logout as apiLogout } from '../services/auth';
 
 // Create context
 const AuthContext = createContext(null);
@@ -14,19 +14,12 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
       const userType = localStorage.getItem('userType');
+      
       if (token && userType) {
-        try {
-          const isValid = await validateToken(token);
-          if (isValid) {
-            setAuth({ token, userType });
-          } else {
-            // Token invalid
-            apiLogout();
-          }
-        } catch (error) {
-          console.error('Auth validation error', error);
-          apiLogout();
-        }
+        // Token varsa direkt olarak auth state'ini set et
+        setAuth({ token, userType });
+      } else {
+        setAuth(null);
       }
       setLoading(false);
     };
@@ -56,8 +49,15 @@ export const AuthProvider = ({ children }) => {
   // Check if user is admin
   const isAdmin = auth?.userType === 'ADMIN';
 
+  // User object for components
+  const user = auth ? {
+    role: auth.userType,
+    token: auth.token
+  } : null;
+
   const value = {
     auth,
+    user,
     loading,
     login,
     logout,

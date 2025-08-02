@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import translations from '../i18n/translations';
 
 const LanguageContext = createContext();
@@ -8,8 +8,18 @@ export function useLanguage() {
 }
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState('tr');
+  // localStorage'dan dil bilgisini al, yoksa varsayılan olarak 'tr' kullan
+  const [language, setLanguage] = useState(() => {
+    const savedLanguage = localStorage.getItem('selectedLanguage');
+    return savedLanguage || 'tr';
+  });
+  
   const t = translations[language];
+
+  // Dil değiştiğinde localStorage'a kaydet
+  useEffect(() => {
+    localStorage.setItem('selectedLanguage', language);
+  }, [language]);
 
   const value = {
     language,

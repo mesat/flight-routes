@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 function LocationForm({ 
@@ -14,20 +14,27 @@ function LocationForm({
 }) {
   const { t } = useLanguage();
   
+  // Güvenli prop kontrolleri
+  const safeFormData = formData || {};
+  const isEditing = !!editingLocation;
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {editingLocation ? t.locations.editLocation : t.locations.addLocation}
+            {isEditing ? t.locations.editLocation : t.locations.addLocation}
           </DialogTitle>
+          <DialogDescription>
+            {isEditing ? t.locations.editLocationDesc : t.locations.addLocationDesc}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">{t.locations.name}</label>
               <Input
-                value={formData.name}
+                value={safeFormData.name || ''}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
                   name: e.target.value
@@ -39,7 +46,7 @@ function LocationForm({
             <div className="space-y-2">
               <label className="text-sm font-medium">{t.locations.country}</label>
               <Input
-                value={formData.country}
+                value={safeFormData.country || ''}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
                   country: e.target.value
@@ -51,7 +58,7 @@ function LocationForm({
             <div className="space-y-2">
               <label className="text-sm font-medium">{t.locations.city}</label>
               <Input
-                value={formData.city}
+                value={safeFormData.city || ''}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
                   city: e.target.value
@@ -63,7 +70,7 @@ function LocationForm({
             <div className="space-y-2">
               <label className="text-sm font-medium">{t.locations.code}</label>
               <Input
-                value={formData.locationCode}
+                value={safeFormData.locationCode || ''}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
                   locationCode: e.target.value.toUpperCase()
@@ -83,11 +90,12 @@ function LocationForm({
               type="button" 
               variant="outline" 
               onClick={onClose}
+              className="w-20"
             >
               {t.locations.cancel}
             </Button>
-            <Button type="submit">
-              {editingLocation ? t.locations.update : t.locations.create}
+            <Button type="submit" className="w-20">
+              {isEditing ? t.locations.update : t.locations.create}
             </Button>
           </div>
         </form>

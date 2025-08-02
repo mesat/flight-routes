@@ -1,9 +1,17 @@
 // App.jsx
 import React from 'react';
-import MainApp from './MainApp'; // MainApp'i import edin
+import { AuthProvider } from './hooks/useAuth';
+import { LanguageProvider } from './contexts/LanguageContext';
+import MainApp from './MainApp';
 
 function App() {
-  return <MainApp />;
+  return (
+    <LanguageProvider>
+      <AuthProvider>
+        <MainApp />
+      </AuthProvider>
+    </LanguageProvider>
+  );
 }
 
 export default App;

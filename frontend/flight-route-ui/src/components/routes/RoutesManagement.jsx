@@ -3,6 +3,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import RouteSearchForm from './RouteSearchForm';
 import RoutesList from './RoutesList';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { locationService } from '../../services/locationService';
+import api, { getAlternativeDays } from '../../services/api';
 
 function RoutesManagement() {
   const { t } = useLanguage();
@@ -11,6 +13,7 @@ function RoutesManagement() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [alternativeDays, setAlternativeDays] = useState([]);
   const [searchData, setSearchData] = useState({
     originLocationCode: '',
     destinationLocationCode: '',
@@ -23,16 +26,60 @@ function RoutesManagement() {
 
   const fetchLocations = async () => {
     try {
-      const response = await fetch('/api/locations', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error(t.errors.loadFailed);
-      const data = await response.json();
-      setLocations(data);
+      setLoading(true);
+      setError('');
+      
+      // Tüm lokasyonları al (pagination olmadan)
+      const response = await locationService.getAllLocations(0, 1000);
+      
+      // Response kontrolü
+      if (!response) {
+        throw new Error('API response is empty');
+      }
+      
+      // content property kontrolü
+      const locationsData = response.content || response || [];
+      
+      if (!Array.isArray(locationsData)) {
+        throw new Error('Locations data is not an array');
+      }
+      
+      setLocations(locationsData);
     } catch (err) {
-      setError(err.message);
+      console.error('Error fetching locations:', err);
+      setError(err.message || t.errors.loadFailed);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Gün numarasını gün adına çevir
+  const getDayName = (dayNumber) => {
+    const dayNames = {
+      1: t.common.monday,
+      2: t.common.tuesday,
+      3: t.common.wednesday,
+      4: t.common.thursday,
+      5: t.common.friday,
+      6: t.common.saturday,
+      7: t.common.sunday
+    };
+    return dayNames[dayNumber] || `Day ${dayNumber}`;
+  };
+
+  // Alternatif günleri formatla
+  const formatAlternativeDays = (days) => {
+    if (!days || days.length === 0) return '';
+    
+    const dayNames = days.map(day => getDayName(day));
+    
+    if (dayNames.length === 1) {
+      return dayNames[0];
+    } else if (dayNames.length === 2) {
+      return `${dayNames[0]} ${t.common.and} ${dayNames[1]}`;
+    } else {
+      const lastDay = dayNames.pop();
+      return `${dayNames.join(', ')} ${t.common.and} ${lastDay}`;
     }
   };
 
@@ -46,21 +93,17 @@ function RoutesManagement() {
     setLoading(true);
     setError('');
     setHasSearched(true);
+    setAlternativeDays([]);
 
     try {
-      const response = await fetch('/api/routes/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(searchData)
-      });
+      const response = await api.post('/api/routes/search', searchData);
+      setRoutes(response);
       
-      if (!response.ok) throw new Error(t.errors.searchFailed);
-      
-      const data = await response.json();
-      setRoutes(data);
+      // Eğer rota bulunamadıysa alternatif günleri kontrol et
+      if (!response || response.length === 0) {
+        const alternativeDaysResponse = await getAlternativeDays(searchData);
+        setAlternativeDays(alternativeDaysResponse);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -70,22 +113,28 @@ function RoutesManagement() {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-6">{t.routes.searchTitle}</h2>
+      <h2 className="text-lg font-semibold mb-6">{t.routes.title}</h2>
       
       {error && (
         <Alert variant="destructive" className="mb-4">
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>{t.common.error}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <RouteSearchForm 
-        locations={locations}
-        searchData={searchData}
-        setSearchData={setSearchData}
-        onSearch={handleSearch}
-        loading={loading}
-      />
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      ) : (
+        <RouteSearchForm 
+          locations={locations}
+          searchData={searchData}
+          setSearchData={setSearchData}
+          onSearch={handleSearch}
+          loading={loading}
+        />
+      )}
 
       {hasSearched && !loading && (
         <div className="mt-6">
@@ -95,6 +144,15 @@ function RoutesManagement() {
           
           {routes.length > 0 && (
             <RoutesList routes={routes} />
+          )}
+          
+          {routes.length === 0 && alternativeDays.length > 0 && (
+            <Alert className="mb-4">
+              <AlertTitle>{t.routes.alternativeDaysTitle}</AlertTitle>
+              <AlertDescription>
+                {t.routes.alternativeDaysMessage.replace('{days}', formatAlternativeDays(alternativeDays))}
+              </AlertDescription>
+            </Alert>
           )}
         </div>
       )}

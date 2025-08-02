@@ -1,52 +1,39 @@
 // frontend/flight-route-ui/src/services/transportationService.js
 import api from './api';
 
-/* ============================================================
-   1) Listeleme
-   ============================================================ */
-export const getAllTransportations = async () => {
-  return api.get('/api/transportations');
-};
+export const transportationService = {
+  // Tüm ulaşımları getir (pagination ile)
+  getAllTransportations: async (page = 0, size = 10) => {
+    const response = await api.get(`/api/transportations?page=${page}&size=${size}`);
+    return response;
+  },
 
-/* İsteğe bağlı filtre (originId & destId) */
-export const getTransportationsByLocations = async (originId, destinationId) => {
-  return api.get('/api/transportations', {
-    params: { originId, destinationId }
-  });
-};
+  // Ulaşım oluştur
+  createTransportation: async (transportationData) => {
+    const response = await api.post('/api/transportations', transportationData);
+    return response;
+  },
 
-/* ============================================================
-   2) Tekil sorgu
-   ============================================================ */
-export const getTransportationById = async (id) =>
-  api.get(`/api/transportations/${id}`);
+  // Ulaşım güncelle
+  updateTransportation: async (id, transportationData) => {
+    const response = await api.put(`/api/transportations/${id}`, transportationData);
+    return response;
+  },
 
-/* ============================================================
-   3) Oluşturma
-   ============================================================ */
-export const createTransportation = async (transportationData) =>
-  api.post('/api/transportations', transportationData);
+  // Ulaşım sil
+  deleteTransportation: async (id) => {
+    await api.delete(`/api/transportations/${id}`);
+  },
 
-/* ============================================================
-   4) Güncelleme
-   ============================================================ */
-export const updateTransportation = async (id, transportationData) =>
-  api.put(`/api/transportations/${id}`, transportationData);
+  // Lokasyonlara göre ulaşım ara (pagination ile)
+  searchTransportations: async (originId, destinationId, page = 0, size = 10) => {
+    const response = await api.get(`/api/transportations/search?originId=${originId}&destinationId=${destinationId}&page=${page}&size=${size}`);
+    return response;
+  },
 
-/* ============================================================
-   5) Silme
-   ============================================================ */
-export const deleteTransportation = async (id) =>
-  api.delete(`/api/transportations/${id}`);
-
-/* ============================================================
-   Varsayılan toplu export
-   ============================================================ */
-export default {
-  getAllTransportations,
-  getTransportationsByLocations,
-  getTransportationById,
-  createTransportation,
-  updateTransportation,
-  deleteTransportation
+  // Cache temizle
+  clearCache: async () => {
+    const response = await api.post('/api/transportations/cache/clear');
+    return response;
+  }
 };

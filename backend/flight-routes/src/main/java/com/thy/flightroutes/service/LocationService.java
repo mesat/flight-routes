@@ -1,6 +1,7 @@
 package com.thy.flightroutes.service;
 
 import com.thy.flightroutes.dto.LocationDTO;
+import com.thy.flightroutes.dto.PageResponseDTO;
 import com.thy.flightroutes.entity.Location;
 import com.thy.flightroutes.exception.ResourceNotFoundException;
 import com.thy.flightroutes.repository.LocationRepository;
@@ -8,6 +9,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,9 +27,26 @@ public class LocationService {
 
   /* ---------- READ OPERATIONS ---------- */
 
-  @Cacheable(value = "locations", key = "'all'", unless = "#result == null || #result.isEmpty()")
-  public List<LocationDTO> getAllLocations() {
-    return locationRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+  @Cacheable(value = "locations", key = "'all_' + #page + '_' + #size")
+  public PageResponseDTO<LocationDTO> getAllLocations(int page, int size) {
+    Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+    Page<Location> locationPage = locationRepository.findAll(pageable);
+    
+    List<LocationDTO> content = locationPage.getContent().stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+
+    return new PageResponseDTO<>(
+            content,
+            page,
+            size,
+            locationPage.getTotalElements(),
+            locationPage.getTotalPages(),
+            locationPage.hasNext(),
+            locationPage.hasPrevious(),
+            locationPage.isFirst(),
+            locationPage.isLast()
+    );
   }
 
   @Cacheable(value = "locations", key = "#code")

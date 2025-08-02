@@ -1,10 +1,10 @@
 package com.thy.flightroutes.controller;
 
+import com.thy.flightroutes.dto.PageResponseDTO;
 import com.thy.flightroutes.dto.TransportationDTO;
 import com.thy.flightroutes.service.TransportationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -12,12 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/transportations")
@@ -30,16 +29,20 @@ public class TransportationController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "Get all transportations",
-            description = "Returns a list of all transportation routes in the system"
+            description = "Returns a paginated list of all transportation routes in the system"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved transportations",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransportationDTO.class)))),
+                    content = @Content(schema = @Schema(implementation = PageResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    public List<TransportationDTO> getAllTransportations() {
-        return transportationService.getAllTransportations();
+    public PageResponseDTO<TransportationDTO> getAllTransportations(
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+        return transportationService.getAllTransportations(page, size);
     }
 
     @PostMapping
@@ -67,21 +70,25 @@ public class TransportationController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "Search transportations",
-            description = "Search transportations by origin and destination locations"
+            description = "Search transportations by origin and destination locations with pagination"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved transportations",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransportationDTO.class)))),
+                    content = @Content(schema = @Schema(implementation = PageResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "404", description = "Location not found")
     })
-    public List<TransportationDTO> searchTransportations(
+    public PageResponseDTO<TransportationDTO> searchTransportations(
             @Parameter(description = "Origin location ID", required = true)
             @RequestParam Long originId,
             @Parameter(description = "Destination location ID", required = true)
-            @RequestParam Long destinationId) {
-        return transportationService.getTransportationsByLocations(originId, destinationId);
+            @RequestParam Long destinationId,
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+        return transportationService.getTransportationsByLocations(originId, destinationId, page, size);
     }
 
     @PutMapping("/{id}")
@@ -123,5 +130,16 @@ public class TransportationController {
             @PathVariable Long id) {
         transportationService.deleteTransportation(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/cache/clear")
+    @PreAuthorize("hasRole('ADMIN')")
+    @CacheEvict(value = {"transportations", "routes"}, allEntries = true)
+    @Operation(
+            summary = "Clear transportation cache",
+            description = "Clears the transportation cache to force reload of data"
+    )
+    public ResponseEntity<String> clearCache() {
+        return ResponseEntity.ok("Transportation cache cleared successfully");
     }
 }
