@@ -1,175 +1,114 @@
-import React, { useState, useEffect } from 'react';
+// frontend/flight-route-ui/src/components/transportations/TransportationsManagement.jsx
+import React, { useEffect, useState, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Alert,
+  AlertTitle,
+  AlertDescription
+} from '@/components/ui/alert';
+import { useLanguage } from '../../contexts/LanguageContext';
+
 import TransportationsList from './TransportationsList';
 import TransportationForm from './TransportationForm';
 
-function TransportationsManagement({ t }) {
+// ⬇️ Artık tüm HTTP işlemleri ortak servis katmanından geliyor
+import transportationService from '../../services/transportationService';
+
+function TransportationsManagement() {
+  const { t } = useLanguage();
+
   const [transportations, setTransportations] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const [selected, setSelected] = useState(null);      // yeni / düzenlenecek kayıt
   const [error, setError] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTransportation, setEditingTransportation] = useState(null);
-  const [formData, setFormData] = useState({
-    originLocationId: '',
-    destinationLocationId: '',
-    transportationType: '',
-    operatingDays: []
-  });
 
-  useEffect(() => {
-    fetchLocations();
-    fetchTransportations();
-  }, []);
-
-  const fetchLocations = async () => {
+  /* -------------------------------------------------- */
+  /*  Yardımcı fonksiyonlar                             */
+  /* -------------------------------------------------- */
+  const loadTransportations = useCallback(async () => {
     try {
-      const response = await fetch('/api/locations', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error(t.errors.loadFailed);
-      const data = await response.json();
-      setLocations(data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const fetchTransportations = async () => {
-    try {
-      const response = await fetch('/api/transportations', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error(t.errors.loadFailed);
-      const data = await response.json();
+      setError('');
+      const data = await transportationService.getAllTransportations();
       setTransportations(data);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || t.errors.loadFailed);
+    }
+  }, [t.errors.loadFailed]);
+
+  const handleCreate = async (dto) => {
+    try {
+      await transportationService.createTransportation(dto);
+      await loadTransportations();
+    } catch (err) {
+      setError(err.message || t.errors.createFailed);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    // Validate same location
-    if (formData.originLocationId === formData.destinationLocationId) {
-      setError(t.transportations.sameLocationError);
-      return;
-    }
-
-    // Validate operating days
-    if (formData.operatingDays.length === 0) {
-      setError(t.transportations.selectDays);
-      return;
-    }
-
+  const handleUpdate = async (id, dto) => {
     try {
-      const url = editingTransportation 
-        ? `/api/transportations/${editingTransportation.id}`
-        : '/api/transportations';
-        
-      const method = editingTransportation ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) throw new Error(t.errors.operationFailed);
-
-      await fetchTransportations();
-      setIsDialogOpen(false);
-      setFormData({
-        originLocationId: '',
-        destinationLocationId: '',
-        transportationType: '',
-        operatingDays: []
-      });
-      setEditingTransportation(null);
+      await transportationService.updateTransportation(id, dto);
+      await loadTransportations();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || t.errors.updateFailed);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t.transportations.deleteConfirm)) return;
-    
     try {
-      const response = await fetch(`/api/transportations/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error(t.errors.deleteFailed);
-      await fetchTransportations();
+      await transportationService.deleteTransportation(id);
+      await loadTransportations();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || t.errors.deleteFailed);
     }
   };
 
-  const handleEdit = (transportation) => {
-    setEditingTransportation(transportation);
-    setFormData({
-      originLocationId: transportation.originLocation.id,
-      destinationLocationId: transportation.destinationLocation.id,
-      transportationType: transportation.transportationType,
-      operatingDays: transportation.operatingDays
-    });
-    setIsDialogOpen(true);
-  };
+  /* -------------------------------------------------- */
+  /*  Yaşam döngüsü                                     */
+  /* -------------------------------------------------- */
+  useEffect(() => {
+    loadTransportations();
+  }, [loadTransportations]);
 
+  /* -------------------------------------------------- */
+  /*  Görünüm                                           */
+  /* -------------------------------------------------- */
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold">{t.transportations.management}</h2>
-        <Button 
-          onClick={() => {
-            setEditingTransportation(null);
-            setFormData({
-              originLocationId: '',
-              destinationLocationId: '',
-              transportationType: '',
-              operatingDays: []
-            });
-            setIsDialogOpen(true);
-          }}
-        >
-          {t.transportations.addTransportation}
-        </Button>
-      </div>
+      <h2 className="text-xl font-bold mb-4">
+        {t.transportations.title}
+      </h2>
 
       {error && (
         <Alert variant="destructive" className="mb-4">
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>{t.common.error}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <TransportationsList 
+      <Button onClick={() => setSelected({})} className="mb-4">
+        {t.transportations.add}
+      </Button>
+
+      <TransportationsList
         transportations={transportations}
-        onEdit={handleEdit}
+        onEdit={setSelected}
         onDelete={handleDelete}
-        t={t}
       />
 
-      <TransportationForm 
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        onSubmit={handleSubmit}
-        formData={formData}
-        setFormData={setFormData}
-        editingTransportation={editingTransportation}
-        locations={locations}
-        t={t}
-      />
+      {/* Modal formu; seçili kayıt varsa gösterilir */}
+      {selected !== null && (
+        <TransportationForm
+          initialData={selected}
+          onCancel={() => setSelected(null)}
+          onSubmit={(dto) => {
+            if (selected.id) {
+              handleUpdate(selected.id, dto);
+            } else {
+              handleCreate(dto);
+            }
+            setSelected(null);
+          }}
+        />
+      )}
     </div>
   );
 }
