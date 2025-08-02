@@ -5,6 +5,7 @@ import com.thy.flightroutes.dto.RouteRequestDTO;
 import com.thy.flightroutes.dto.TransportationDTO;
 import com.thy.flightroutes.entity.Location;
 import com.thy.flightroutes.entity.Transportation;
+import com.thy.flightroutes.exception.ResourceNotFoundException;
 import com.thy.flightroutes.repository.LocationRepository;
 import com.thy.flightroutes.repository.TransportationRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class RouteService {
             .findByLocationCode(request.getOriginLocationCode())
             .orElseThrow(
                 () ->
-                    new IllegalArgumentException(
+                    new ResourceNotFoundException(
                         "Origin location not found: " + request.getOriginLocationCode()));
     List<Location> originAirports;
     List<Location> destinationAirports;
@@ -46,7 +47,7 @@ public class RouteService {
             .findByLocationCode(request.getDestinationLocationCode())
             .orElseThrow(
                 () ->
-                    new IllegalArgumentException(
+                    new ResourceNotFoundException(
                         "Destination location not found: " + request.getDestinationLocationCode()));
 
     if (originLocation.getLocationCode().equalsIgnoreCase(destinationLocation.getLocationCode())) {
