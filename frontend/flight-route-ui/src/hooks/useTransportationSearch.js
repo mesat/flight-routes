@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 
-// Türkçe karakterleri normalize eden fonksiyon
+// Türkçe karakterleri normalize eden fonksiyon - iyileştirildi
 const normalizeTurkishText = (text) => {
+    if (!text) return '';
     return text
         .toLowerCase()
         .replace(/ğ/g, 'g')
@@ -15,7 +16,10 @@ const normalizeTurkishText = (text) => {
         .replace(/Ş/g, 's')
         .replace(/İ/g, 'i')
         .replace(/Ö/g, 'o')
-        .replace(/Ç/g, 'c');
+        .replace(/Ç/g, 'c')
+        .replace(/i̇/g, 'i') // İ harfinin küçük hali için
+        .replace(/I/g, 'i') // Büyük I harfi için
+        .replace(/ı/g, 'i'); // Küçük ı harfi için
 };
 
 export const useTransportationSearch = (transportations) => {
@@ -37,30 +41,44 @@ export const useTransportationSearch = (transportations) => {
         );
     };
 
-    // Gelişmiş arama fonksiyonu - her kelime tam olarak eşleşmeli
+    // Gelişmiş arama fonksiyonu - hem origin hem destination'da arama yapacak şekilde güncellendi
     const matchesAdvancedSearch = (transport, searchWords) => {
-        // Transport için tüm arama alanlarını ayrı ayrı tut
-        const searchableFields = [
+        // Origin ve destination için ayrı ayrı arama alanları
+        const originFields = [
             transport.originLocation?.name || '',
             transport.originLocation?.city || '',
             transport.originLocation?.country || '',
-            transport.originLocation?.locationCode || '',
+            transport.originLocation?.locationCode || ''
+        ];
+
+        const destinationFields = [
             transport.destinationLocation?.name || '',
             transport.destinationLocation?.city || '',
             transport.destinationLocation?.country || '',
-            transport.destinationLocation?.locationCode || '',
-            transport.transportationType || ''
+            transport.destinationLocation?.locationCode || ''
         ];
 
-        // Her kelime için kontrol et
-        return searchWords.every(searchWord => {
+        const transportationType = transport.transportationType || '';
+
+        // Origin ve destination için ayrı ayrı metin oluştur
+        const originText = originFields.join(' ').toLowerCase();
+        const destinationText = destinationFields.join(' ').toLowerCase();
+        const normalizedOriginText = normalizeTurkishText(originText);
+        const normalizedDestinationText = normalizeTurkishText(destinationText);
+        const normalizedTransportationType = normalizeTurkishText(transportationType);
+
+        // Arama terimini normalize et
+        const normalizedSearchTerm = normalizeTurkishText(searchWords.join(' '));
+
+        // Her kelime için hem origin hem destination'da arama yap
+        // Kullanıcı "İstanbul" yazdığında hem origin hem destination'da İstanbul olan ulaşımları görmek istiyor
+        return searchWords.some(searchWord => {
             const normalizedSearchWord = normalizeTurkishText(searchWord);
             
-            // Her kelime en az bir alanda tam olarak eşleşmeli
-            return searchableFields.some(field => {
-                const normalizedField = normalizeTurkishText(field);
-                return normalizedField.includes(normalizedSearchWord);
-            });
+            // Origin'de veya destination'da veya transportation type'da eşleşme var mı?
+            return normalizedOriginText.includes(normalizedSearchWord) ||
+                   normalizedDestinationText.includes(normalizedSearchWord) ||
+                   normalizedTransportationType.includes(normalizedSearchWord);
         });
     };
 
@@ -70,16 +88,16 @@ export const useTransportationSearch = (transportations) => {
         const searchWords = searchTerm.trim().split(/\s+/).filter(word => word.length > 0);
         
         let filtered = transportations.filter(transport => {
-            // Eğer arama terimi yoksa tüm ulaşımları göster
+            // Tip filtresi kontrolü
+            const matchesType = selectedTypes.length === 0 || selectedTypes.includes(transport.transportationType);
+            
+            // Eğer tip filtresi yoksa ve arama terimi de yoksa tüm ulaşımları göster
             if (searchWords.length === 0) {
-                return true;
+                return matchesType;
             }
 
-            // Gelişmiş arama kontrolü
+            // Arama kontrolü
             const matchesSearch = matchesAdvancedSearch(transport, searchWords);
-
-            // Tip filtresi
-            const matchesType = selectedTypes.length === 0 || selectedTypes.includes(transport.transportationType);
 
             return matchesSearch && matchesType;
         });
@@ -114,6 +132,7 @@ export const useTransportationSearch = (transportations) => {
         searchTerm,
         setSearchTerm,
         selectedTypes,
+        setSelectedTypes,
         availableTypes,
         toggleTypeFilter,
         filteredAndGroupedTransportations,

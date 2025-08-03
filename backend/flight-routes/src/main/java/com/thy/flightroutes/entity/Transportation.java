@@ -10,7 +10,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "transportations")
+@Table(name = "transportations", uniqueConstraints =
+@UniqueConstraint(
+        name = "transp_orig_dest_type_pk",
+        columnNames = {"origin_location_id","destination_location_id", "transportation_type" }))
 @Getter
 @Setter
 @NoArgsConstructor

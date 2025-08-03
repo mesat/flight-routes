@@ -4,6 +4,7 @@ import com.thy.flightroutes.dto.TransportationDTO;
 import com.thy.flightroutes.dto.PageResponseDTO;
 import com.thy.flightroutes.entity.Location;
 import com.thy.flightroutes.entity.Transportation;
+import com.thy.flightroutes.entity.Transportation.TransportationType;
 import com.thy.flightroutes.exception.ResourceNotFoundException;
 import com.thy.flightroutes.repository.LocationRepository;
 import com.thy.flightroutes.repository.TransportationRepository;
@@ -29,7 +30,7 @@ public class TransportationService {
     private final TransportationRepository transportationRepository;
     private final LocationRepository locationRepository;
 
-    @Cacheable(value = "transportations", key = "'all_' + #page + '_' + #size")
+    @Cacheable(value = "transportations_paginated", key = "'page_' + #page + '_size_' + #size")
     public PageResponseDTO<TransportationDTO> getAllTransportations(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         Page<Transportation> transportationPage = transportationRepository.findAllWithLocations(pageable);
@@ -51,7 +52,7 @@ public class TransportationService {
         );
     }
 
-    @Cacheable(value = "transportations", key = "'by_locations_' + #originLocationId + '_' + #destinationLocationId + '_' + #page + '_' + #size")
+    @Cacheable(value = "transportations_by_locations", key = "'origin_' + #originLocationId + '_dest_' + #destinationLocationId + '_page_' + #page + '_size_' + #size")
     public PageResponseDTO<TransportationDTO> getTransportationsByLocations(Long originLocationId, Long destinationLocationId, int page, int size) {
         Location origin = locationRepository.findById(originLocationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Origin location not found: " + originLocationId));
@@ -79,7 +80,8 @@ public class TransportationService {
         );
     }
 
-    @CacheEvict(value = {"transportations", "routes"}, allEntries = true)
+    // Granular cache eviction - only clear related caches
+    @CacheEvict(value = {"transportations_search", "transportations_paginated"}, allEntries = true)
     public TransportationDTO createTransportation(TransportationDTO dto) {
         validateTransportation(dto);
 
@@ -99,7 +101,8 @@ public class TransportationService {
         return TransportationDTO.fromEntity(transportation);
     }
 
-    @CacheEvict(value = {"transportations", "routes"}, allEntries = true)
+    // Granular cache eviction - only clear related caches
+    @CacheEvict(value = {"transportations_search", "transportations_paginated"}, allEntries = true)
     public TransportationDTO updateTransportation(Long id, TransportationDTO dto) {
         validateTransportation(dto);
 
@@ -121,12 +124,29 @@ public class TransportationService {
         return TransportationDTO.fromEntity(transportation);
     }
 
-    @CacheEvict(value = {"transportations", "routes"}, allEntries = true)
+    // Granular cache eviction - only clear related caches
+    @CacheEvict(value = {"transportations_search", "transportations_paginated"}, allEntries = true)
     public void deleteTransportation(Long id) {
         if (!transportationRepository.existsById(id)) {
             throw new ResourceNotFoundException("Transportation not found: " + id);
         }
         transportationRepository.deleteById(id);
+    }
+
+    @Cacheable(value = "transportations_types")
+    public List<String> getAllTransportationTypes() {
+        return transportationRepository.findDistinctTransportationTypes()
+                .stream()
+                .map(TransportationType::name)
+                .collect(Collectors.toList());
+    }
+
+    @Cacheable(value = "transportations_search")
+    public List<TransportationDTO> getAllTransportationsForSearch() {
+        List<Transportation> transportations = transportationRepository.findAllWithLocations();
+        return transportations.stream()
+                .map(TransportationDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     private void validateTransportation(TransportationDTO dto) {

@@ -74,7 +74,7 @@ class TransportationServiceTest {
         when(transportationRepository.findAll()).thenReturn(transportations);
 
         // When
-        List<TransportationDTO> result = transportationService.getAllTransportations();
+        List<TransportationDTO> result = transportationService.getAllTransportations(0, 1000).getContent();
 
         // Then
         assertThat(result).hasSize(1);
@@ -91,7 +91,9 @@ class TransportationServiceTest {
                 .thenReturn(Arrays.asList(testTransportation));
 
         // When
-        List<TransportationDTO> result = transportationService.getTransportationsByLocations(1L, 2L);
+        List<TransportationDTO> result = transportationService
+                .getTransportationsByLocations(1L, 2L,0,1000)
+                .getContent();
 
         // Then
         assertThat(result).hasSize(1);

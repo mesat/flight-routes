@@ -154,8 +154,9 @@ function LocationsManagement() {
           setFormData({ name: '', country: '', city: '', locationCode: '' });
         }}
         onSubmit={editingLocation ? handleUpdate : handleCreate}
-        initialData={formData}
-        isEditing={!!editingLocation}
+        formData={formData}
+        setFormData={setFormData}
+        editingLocation={editingLocation}
       />
     </div>
   );

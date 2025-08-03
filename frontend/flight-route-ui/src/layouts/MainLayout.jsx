@@ -24,7 +24,7 @@ function MainLayout({ children, currentPage, onPageChange }) {
       <Header title={getPageTitle()} />
       <div className="flex">
         <Sidebar currentPage={currentPage} onPageChange={onPageChange} />
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-2 lg:p-6">
           {children}
         </main>
       </div>

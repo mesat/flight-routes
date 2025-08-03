@@ -45,27 +45,27 @@ function LocationsList({ locations, onEdit, onDelete }) {
               <p className="text-sm text-gray-600">{countryLocations.length} lokasyon</p>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+              <table className="w-full text-sm text-left min-w-full">
                 <thead className="text-xs bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 font-medium">{t.locations.name}</th>
-                    <th scope="col" className="px-6 py-3 font-medium">{t.locations.city}</th>
-                    <th scope="col" className="px-6 py-3 font-medium">{t.locations.code}</th>
-                    <th scope="col" className="px-6 py-3 font-medium text-right">{t.locations.actions}</th>
+                    <th scope="col" className="px-3 lg:px-6 py-3 font-medium">{t.locations.name}</th>
+                    <th scope="col" className="px-3 lg:px-6 py-3 font-medium">{t.locations.city}</th>
+                    <th scope="col" className="px-3 lg:px-6 py-3 font-medium">{t.locations.code}</th>
+                    <th scope="col" className="px-3 lg:px-6 py-3 font-medium text-right">{t.locations.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {countryLocations.map(location => (
                     <tr key={location.id} className="bg-white border-t hover:bg-gray-50">
-                      <td className="px-6 py-4">{location.name}</td>
-                      <td className="px-6 py-4">{location.city}</td>
-                      <td className="px-6 py-4 font-mono">{location.locationCode}</td>
-                      <td className="px-6 py-4 text-right space-x-2">
+                      <td className="px-3 lg:px-6 py-4">{location.name}</td>
+                      <td className="px-3 lg:px-6 py-4">{location.city}</td>
+                      <td className="px-3 lg:px-6 py-4 font-mono">{location.locationCode}</td>
+                      <td className="px-3 lg:px-6 py-4 text-right space-x-1 lg:space-x-2">
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => onEdit(location)}
-                          className="w-16"
+                          className="w-14 lg:w-16 xl:w-20 text-xs lg:text-sm"
                         >
                           {t.locations.edit}
                         </Button>
@@ -77,7 +77,7 @@ function LocationsList({ locations, onEdit, onDelete }) {
                               onDelete(location.id);
                             }
                           }}
-                          className="w-16"
+                          className="w-14 lg:w-16 xl:w-20 text-xs lg:text-sm bg-red-600 hover:bg-red-700 text-white"
                         >
                           {t.locations.delete}
                         </Button>

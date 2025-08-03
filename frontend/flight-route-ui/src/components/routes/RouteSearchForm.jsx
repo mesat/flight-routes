@@ -161,12 +161,12 @@ function RouteSearchForm({
 
   return (
     <>
-      <Card className="p-6">
+      <Card className="p-3 lg:p-6">
         <form onSubmit={(e) => {
           e.preventDefault();
           onSearch();
         }}>
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 lg:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 {t.routes.origin}
@@ -181,14 +181,14 @@ function RouteSearchForm({
                     setShowOriginDropdown(true);
                   }}
                   onFocus={() => setShowOriginDropdown(true)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 pr-20"
+                  className="w-full rounded-md border border-gray-300 px-2 lg:px-3 py-2 pr-10 md:pr-12 lg:pr-20 text-sm"
                 />
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => openAllLocationsModal("origin")}
-                  className="absolute right-1 top-1 h-8 px-2 text-xs hidden sm:inline-flex"
+                  className="absolute right-1 top-1 h-6 lg:h-8 px-1 lg:px-2 text-xs hidden xl:inline-flex"
                 >
                   {t.routes.viewAll}
                 </Button>
@@ -197,7 +197,7 @@ function RouteSearchForm({
                   variant="outline"
                   size="sm"
                   onClick={() => openAllLocationsModal("origin")}
-                  className="absolute right-1 top-1 h-8 w-8 p-0 text-xs sm:hidden"
+                  className="absolute right-1 top-1 h-6 w-6 lg:h-8 lg:w-8 p-0 text-xs xl:hidden"
                   title={t.routes.viewAll}
                 >
                   ⋯
@@ -211,14 +211,14 @@ function RouteSearchForm({
                           className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
                           onClick={() => handleOriginSelect(location)}
                         >
-                          <div className="font-medium">{location.name}</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="font-medium text-sm">{location.name}</div>
+                          <div className="text-xs text-gray-500">
                             {location.city}, {location.country} ({location.locationCode})
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div className="px-3 py-2 text-gray-500">
+                      <div className="px-3 py-2 text-gray-500 text-sm">
                         {t.routes.noLocationsFound}
                       </div>
                     )}
@@ -241,14 +241,14 @@ function RouteSearchForm({
                     setShowDestinationDropdown(true);
                   }}
                   onFocus={() => setShowDestinationDropdown(true)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 pr-20"
+                  className="w-full rounded-md border border-gray-300 px-2 lg:px-3 py-2 pr-10 md:pr-12 lg:pr-20 text-sm"
                 />
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => openAllLocationsModal("destination")}
-                  className="absolute right-1 top-1 h-8 px-2 text-xs hidden sm:inline-flex"
+                  className="absolute right-1 top-1 h-6 lg:h-8 px-1 lg:px-2 text-xs hidden xl:inline-flex"
                 >
                   {t.routes.viewAll}
                 </Button>
@@ -257,7 +257,7 @@ function RouteSearchForm({
                   variant="outline"
                   size="sm"
                   onClick={() => openAllLocationsModal("destination")}
-                  className="absolute right-1 top-1 h-8 w-8 p-0 text-xs sm:hidden"
+                  className="absolute right-1 top-1 h-6 w-6 lg:h-8 lg:w-8 p-0 text-xs xl:hidden"
                   title={t.routes.viewAll}
                 >
                   ⋯
@@ -271,14 +271,14 @@ function RouteSearchForm({
                           className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
                           onClick={() => handleDestinationSelect(location)}
                         >
-                          <div className="font-medium">{location.name}</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="font-medium text-sm">{location.name}</div>
+                          <div className="text-xs text-gray-500">
                             {location.city}, {location.country} ({location.locationCode})
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div className="px-3 py-2 text-gray-500">
+                      <div className="px-3 py-2 text-gray-500 text-sm">
                         {t.routes.noLocationsFound}
                       </div>
                     )}
@@ -304,7 +304,7 @@ function RouteSearchForm({
                 minDate={new Date()}
                 dateFormat="yyyy-MM-dd"
                 placeholderText="yyyy-aa-gg"
-                className="w-full rounded-md border border-gray-300 px-3 py-2" 
+                className="w-full rounded-md border border-gray-300 px-2 lg:px-3 py-2 text-sm" 
                 calendarStartDay={1} // Pazartesi başlangıcı
                 required
               />
@@ -314,7 +314,7 @@ function RouteSearchForm({
             <div className="flex items-end">
               <Button 
                 type="submit" 
-                className="w-full"
+                className="w-full text-sm"
                 disabled={loading}
               >
                 {loading ? t.routes.searching : t.routes.search}

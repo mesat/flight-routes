@@ -27,7 +27,7 @@ public class LocationService {
 
   /* ---------- READ OPERATIONS ---------- */
 
-  @Cacheable(value = "locations", key = "'all_' + #page + '_' + #size")
+  @Cacheable(value = "locations", key = "'page_' + #page + '_size_' + #size")
   public PageResponseDTO<LocationDTO> getAllLocations(int page, int size) {
     Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
     Page<Location> locationPage = locationRepository.findAll(pageable);
@@ -49,7 +49,7 @@ public class LocationService {
     );
   }
 
-  @Cacheable(value = "locations", key = "#code")
+  @Cacheable(value = "locations", key = "'code_' + #code")
   public LocationDTO getLocationByCode(String code) {
     Location location =
         locationRepository
@@ -61,9 +61,8 @@ public class LocationService {
 
   /* ---------- WRITE OPERATIONS ---------- */
 
-  @CacheEvict(
-      value = {"locations", "routes"},
-      allEntries = true)
+  // Granular cache eviction - only clear locations cache, routes will be invalidated naturally
+  @CacheEvict(value = "locations", allEntries = true)
   public LocationDTO createLocation(LocationDTO locationDTO) {
     validateLocationCode(locationDTO.getLocationCode());
 
@@ -77,10 +76,8 @@ public class LocationService {
     return toDTO(location);
   }
 
-  // <---------- Güncellediğimiz satır
-  @CacheEvict(
-      value = {"locations", "routes"},
-      allEntries = true)
+  // Granular cache eviction - only clear locations cache
+  @CacheEvict(value = "locations", allEntries = true)
   public LocationDTO updateLocation(Long id, LocationDTO locationDTO) {
     Location location =
         locationRepository
@@ -100,9 +97,8 @@ public class LocationService {
     return toDTO(location);
   }
 
-  @CacheEvict(
-      value = {"locations", "routes"},
-      allEntries = true)
+  // Granular cache eviction - only clear locations cache
+  @CacheEvict(value = "locations", allEntries = true)
   public void deleteLocation(Long id) {
     if (!locationRepository.existsById(id)) {
       throw new ResourceNotFoundException("Location not found");

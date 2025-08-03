@@ -84,4 +84,7 @@ public interface TransportationRepository extends JpaRepository<Transportation, 
             @Param("destinationLocations") Collection<Location> destinationLocations,
             @Param("transportationType") TransportationType transportationType
     );
+
+    @Query("SELECT DISTINCT t.transportationType FROM Transportation t")
+    List<TransportationType> findDistinctTransportationTypes();
 }

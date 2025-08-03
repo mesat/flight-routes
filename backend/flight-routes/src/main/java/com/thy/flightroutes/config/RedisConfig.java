@@ -44,17 +44,21 @@ public class RedisConfig {
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
 
-        // Cache-specific TTL configurations
+        // Cache-specific TTL configurations - Optimized for different use cases
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
 
-        // Routes cache: 15 minutes
-        cacheConfigurations.put("routes", config.entryTtl(Duration.ofMinutes(15)));
+        // Routes cache: 5 minutes (frequently changing, complex calculations)
+        cacheConfigurations.put("routes", config.entryTtl(Duration.ofMinutes(5)));
 
-        // Locations cache: 1 day
+        // Locations cache: 1 day (rarely changing, reference data)
         cacheConfigurations.put("locations", config.entryTtl(Duration.ofDays(1)));
 
-        // Transportations cache: 30 minutes
-        cacheConfigurations.put("transportations", config.entryTtl(Duration.ofMinutes(30)));
+        // Transportation caches with different TTLs based on usage patterns
+        cacheConfigurations.put("transportations", config.entryTtl(Duration.ofMinutes(15))); // General cache
+        cacheConfigurations.put("transportations_paginated", config.entryTtl(Duration.ofMinutes(10))); // Page-based results
+        cacheConfigurations.put("transportations_search", config.entryTtl(Duration.ofMinutes(8))); // Search results
+        cacheConfigurations.put("transportations_types", config.entryTtl(Duration.ofHours(2))); // Types rarely change
+        cacheConfigurations.put("transportations_by_locations", config.entryTtl(Duration.ofMinutes(12))); // Location-based queries
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(config)

@@ -54,8 +54,8 @@ function TransportationForm({
                     e.preventDefault();
                     onSubmit(formData);
                 }}>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
+                    <div className="space-y-3 lg:space-y-4 py-2 lg:py-4">
+                        <div className="space-y-1 lg:space-y-2">
                             <label className="text-sm font-medium">{t.transportations.from}</label>
                             <select
                                 value={formData.originLocationId || ''}
@@ -64,7 +64,7 @@ function TransportationForm({
                                     originLocationId: e.target.value
                                 }))}
                                 required
-                                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                                className="w-full rounded-md border border-gray-300 px-2 lg:px-3 py-2 text-sm"
                             >
                                 <option value="">{t.transportations.selectLocation}</option>
                                 {locations && locations.map(location => (
@@ -75,7 +75,7 @@ function TransportationForm({
                             </select>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1 lg:space-y-2">
                             <label className="text-sm font-medium">{t.transportations.to}</label>
                             <select
                                 value={formData.destinationLocationId || ''}
@@ -84,7 +84,7 @@ function TransportationForm({
                                     destinationLocationId: e.target.value
                                 }))}
                                 required
-                                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                                className="w-full rounded-md border border-gray-300 px-2 lg:px-3 py-2 text-sm"
                             >
                                 <option value="">{t.transportations.selectLocation}</option>
                                 {locations && locations.map(location => (
@@ -95,15 +95,15 @@ function TransportationForm({
                             </select>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1 lg:space-y-2">
                             <label className="text-sm font-medium">{t.transportations.type}</label>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-1 lg:gap-2">
                                 {transportationTypes.map(type => (
                                     <button
                                         key={type}
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, transportationType: type }))}
-                                        className={`px-4 py-2 rounded-md text-sm font-medium ${
+                                        className={`px-2 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-medium ${
                                             formData.transportationType === type
                                                 ? 'bg-blue-100 text-blue-800 border-2 border-blue-500'
                                                 : 'bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200'
@@ -115,7 +115,7 @@ function TransportationForm({
                             </div>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1 lg:space-y-2">
                             <label className="text-sm font-medium">{t.transportations.operatingDays}</label>
                             <div className="grid grid-cols-7 gap-1">
                                 {days.map(day => (
@@ -123,7 +123,7 @@ function TransportationForm({
                                         key={day.id}
                                         type="button"
                                         onClick={() => toggleDay(day.id)}
-                                        className={`p-2 text-center text-sm rounded-md ${
+                                        className={`p-1 lg:p-2 text-center text-xs lg:text-sm rounded-md ${
                                             formData.operatingDays && formData.operatingDays.includes(day.id)
                                                 ? 'bg-blue-100 text-blue-800 border-2 border-blue-500'
                                                 : 'bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200'
@@ -134,26 +134,26 @@ function TransportationForm({
                                 ))}
                             </div>
                             {(!formData.operatingDays || formData.operatingDays.length === 0) && (
-                                <p className="text-sm text-red-500">
+                                <p className="text-xs lg:text-sm text-red-500">
                                     {t.transportations.selectDays}
                                 </p>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
+                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-3 lg:mt-4">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={onClose}
-                            className="w-20"
+                            className="w-16 lg:w-20 text-xs lg:text-sm"
                         >
                             {t.common.cancel}
                         </Button>
                         <Button
                             type="submit"
                             disabled={!formData.operatingDays || formData.operatingDays.length === 0}
-                            className="w-20"
+                            className="w-16 lg:w-20 text-xs lg:text-sm"
                         >
                             {editingTransportation ? t.common.update : t.common.create}
                         </Button>

@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/api/routes/**").hasAnyRole("ADMIN", "AGENCY")
+                        .requestMatchers("/api/locations/**").hasAnyRole("ADMIN", "AGENCY")
                         .requestMatchers("/api/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),

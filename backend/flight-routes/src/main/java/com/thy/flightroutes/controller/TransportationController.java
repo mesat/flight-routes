@@ -18,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/transportations")
 @Tag(name = "Transportation Management", description = "Endpoints for managing transportations")
@@ -64,6 +66,38 @@ public class TransportationController {
             @Valid @RequestBody TransportationDTO transportationDTO) {
         TransportationDTO created = transportationService.createTransportation(transportationDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/types")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+            summary = "Get all transportation types",
+            description = "Returns all available transportation types in the system"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved transportation types"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    public ResponseEntity<List<String>> getAllTransportationTypes() {
+        List<String> types = transportationService.getAllTransportationTypes();
+        return ResponseEntity.ok(types);
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+            summary = "Get all transportations for search",
+            description = "Returns all transportation routes for client-side filtering and search"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved all transportations"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    public ResponseEntity<List<TransportationDTO>> getAllTransportationsForSearch() {
+        List<TransportationDTO> transportations = transportationService.getAllTransportationsForSearch();
+        return ResponseEntity.ok(transportations);
     }
 
     @GetMapping("/search")
@@ -134,12 +168,12 @@ public class TransportationController {
 
     @PostMapping("/cache/clear")
     @PreAuthorize("hasRole('ADMIN')")
-    @CacheEvict(value = {"transportations", "routes"}, allEntries = true)
+    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_by_locations", "transportations_types", "routes"}, allEntries = true)
     @Operation(
             summary = "Clear transportation cache",
-            description = "Clears the transportation cache to force reload of data"
+            description = "Clears all transportation-related caches to force reload of data"
     )
     public ResponseEntity<String> clearCache() {
-        return ResponseEntity.ok("Transportation cache cleared successfully");
+        return ResponseEntity.ok("All transportation caches cleared successfully");
     }
 }

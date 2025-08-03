@@ -59,7 +59,7 @@ public class LocationController {
     }
 
     @GetMapping("/{code}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENCY')")
     @Operation(summary = "Get location by code", description = "Returns a location by its location code")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved location"),

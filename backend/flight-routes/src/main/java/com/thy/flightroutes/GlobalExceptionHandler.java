@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -58,6 +59,16 @@ public class GlobalExceptionHandler {
         return new ApiError(
                 HttpStatus.BAD_REQUEST.value(),
                 "Invalid request",
+                Collections.singletonList(ex.getMessage())
+        );
+    }
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    private ApiError handleIllegalArgument(DataIntegrityViolationException ex) {
+        log.error(ex.getMessage(), ex);
+        return new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "Data Integrity Violation",
                 Collections.singletonList(ex.getMessage())
         );
     }

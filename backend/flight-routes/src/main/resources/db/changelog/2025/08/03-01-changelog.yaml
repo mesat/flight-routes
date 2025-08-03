@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1754227915030-1
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: origin_location_id, destination_location_id, transportation_type
+            constraintName: transp_orig_dest_type_pk
+            tableName: transportations
+

@@ -30,8 +30,8 @@ function LocationForm({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit}>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
+          <div className="space-y-3 lg:space-y-4 py-2 lg:py-4">
+            <div className="space-y-1 lg:space-y-2">
               <label className="text-sm font-medium">{t.locations.name}</label>
               <Input
                 value={safeFormData.name || ''}
@@ -40,10 +40,11 @@ function LocationForm({
                   name: e.target.value
                 }))}
                 required
+                className="text-sm"
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1 lg:space-y-2">
               <label className="text-sm font-medium">{t.locations.country}</label>
               <Input
                 value={safeFormData.country || ''}
@@ -52,10 +53,11 @@ function LocationForm({
                   country: e.target.value
                 }))}
                 required
+                className="text-sm"
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1 lg:space-y-2">
               <label className="text-sm font-medium">{t.locations.city}</label>
               <Input
                 value={safeFormData.city || ''}
@@ -64,10 +66,11 @@ function LocationForm({
                   city: e.target.value
                 }))}
                 required
+                className="text-sm"
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1 lg:space-y-2">
               <label className="text-sm font-medium">{t.locations.code}</label>
               <Input
                 value={safeFormData.locationCode || ''}
@@ -77,24 +80,25 @@ function LocationForm({
                 }))}
                 required
                 placeholder="IST or CCIST"
+                className="text-sm"
               />
-              <p className="text-sm text-gray-500">
+              <p className="text-xs lg:text-sm text-gray-500">
                 {t.locations.codeHelp}
               </p>
             </div>
           </div>
           
           {/* Fixing the DialogFooter issue by using a div instead */}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-3 lg:mt-4">
             <Button 
               type="button" 
               variant="outline" 
               onClick={onClose}
-              className="w-20"
+              className="w-16 lg:w-20 text-xs lg:text-sm"
             >
               {t.locations.cancel}
             </Button>
-            <Button type="submit" className="w-20">
+            <Button type="submit" className="w-16 lg:w-20 text-xs lg:text-sm">
               {isEditing ? t.locations.update : t.locations.create}
             </Button>
           </div>

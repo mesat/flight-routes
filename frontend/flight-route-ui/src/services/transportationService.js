@@ -8,6 +8,12 @@ export const transportationService = {
     return response;
   },
 
+  // Tüm ulaşımları getir (arama için - pagination olmadan)
+  getAllTransportationsForSearch: async () => {
+    const response = await api.get('/api/transportations/all');
+    return response;
+  },
+
   // Ulaşım oluştur
   createTransportation: async (transportationData) => {
     const response = await api.post('/api/transportations', transportationData);
@@ -34,6 +40,12 @@ export const transportationService = {
   // Cache temizle
   clearCache: async () => {
     const response = await api.post('/api/transportations/cache/clear');
+    return response;
+  },
+
+  // Tüm ulaşım tiplerini getir
+  getAllTransportationTypes: async () => {
+    const response = await api.get('/api/transportations/types');
     return response;
   }
 };
