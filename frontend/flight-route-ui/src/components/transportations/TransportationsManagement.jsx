@@ -11,7 +11,6 @@ import Pagination from '../ui/pagination';
 function TransportationsManagement() {
   const { t } = useLanguage();
   const [transportations, setTransportations] = useState([]);
-  const [allTransportations, setAllTransportations] = useState([]); // Arama için tüm veriler
   const [locations, setLocations] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransportation, setEditingTransportation] = useState(null);
@@ -30,9 +29,11 @@ function TransportationsManagement() {
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  // Filtrelenmiş sonuçlar için state
-  const [filteredTransportations, setFilteredTransportations] = useState([]);
-  const [hasActiveFilters, setHasActiveFilters] = useState(false);
+  // Arama ve filtreleme state'leri
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [availableTypes, setAvailableTypes] = useState([]);
+  const [isSearchMode, setIsSearchMode] = useState(false); // Arama modu aktif mi?
 
   const loadLocations = async () => {
     try {
@@ -46,7 +47,7 @@ function TransportationsManagement() {
   const loadTransportationTypes = async () => {
     try {
       const response = await transportationService.getAllTransportationTypes();
-      // setAvailableTransportationTypes(response || []); // This line is removed as per the new_code
+      setAvailableTypes(response || []);
     } catch (err) {
       console.error('Error loading transportation types:', err);
     }
@@ -56,7 +57,15 @@ function TransportationsManagement() {
     setLoading(true);
     setError(null);
     try {
-      const response = await transportationService.getAllTransportations(page, size);
+      let response;
+      if (isSearchMode && (searchTerm.trim() || selectedTypes.length > 0)) {
+        // Arama/filtreleme modu
+        response = await transportationService.filterTransportations(searchTerm, selectedTypes, page, size);
+      } else {
+        // Normal mod
+        response = await transportationService.getAllTransportations(page, size);
+      }
+      
       setTransportations(response.content);
       setTotalElements(response.totalElements);
       setTotalPages(response.totalPages);
@@ -68,20 +77,16 @@ function TransportationsManagement() {
     }
   };
 
-  const loadAllTransportationsForSearch = async () => {
-    try {
-      const response = await transportationService.getAllTransportationsForSearch();
-      setAllTransportations(response || []);
-    } catch (err) {
-      console.error('Error loading all transportations for search:', err);
-    }
-  };
-
   useEffect(() => {
     loadLocations();
+    loadTransportationTypes();
     loadTransportations();
-    loadAllTransportationsForSearch();
   }, []);
+
+  // Arama modu değiştiğinde veya sayfa değiştiğinde yeniden yükle
+  useEffect(() => {
+    loadTransportations(currentPage, pageSize);
+  }, [isSearchMode, currentPage, pageSize]);
 
   const handleCreate = async (transportationData) => {
     try {
@@ -89,7 +94,6 @@ function TransportationsManagement() {
       setIsDialogOpen(false);
       setFormData({ originLocationId: '', destinationLocationId: '', transportationType: '', operatingDays: [] });
       loadTransportations(currentPage, pageSize);
-      loadAllTransportationsForSearch(); // Arama verilerini de güncelle
     } catch (err) {
       console.error('Error creating transportation:', err);
       if (err?.message?.includes('Data Integrity Violation')){
@@ -108,7 +112,6 @@ function TransportationsManagement() {
       setEditingTransportation(null);
       setFormData({ originLocationId: '', destinationLocationId: '', transportationType: '', operatingDays: [] });
       loadTransportations(currentPage, pageSize);
-      loadAllTransportationsForSearch(); // Arama verilerini de güncelle
     } catch (err) {
       setError(err.response?.data?.message || t.errors.updateFailed);
     }
@@ -118,7 +121,6 @@ function TransportationsManagement() {
     try {
       await transportationService.deleteTransportation(id);
       loadTransportations(currentPage, pageSize);
-      loadAllTransportationsForSearch(); // Arama verilerini de güncelle
     } catch (err) {
       setError(err.response?.data?.message || t.errors.deleteFailed);
     }
@@ -152,11 +154,29 @@ function TransportationsManagement() {
     loadTransportations(0, newSize);
   };
 
-  // useCallback ile onFilterChange fonksiyonunu sarmalayalım
-  const handleFilterChange = useCallback((filtered, hasFilters) => {
-    setFilteredTransportations(filtered);
-    setHasActiveFilters(hasFilters);
-  }, []);
+  // Arama butonuna tıklandığında
+  const handleSearch = () => {
+    setIsSearchMode(true);
+    setCurrentPage(0);
+    loadTransportations(0, pageSize);
+  };
+
+  // Filtreleri temizle
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setSelectedTypes([]);
+    setIsSearchMode(false);
+    setCurrentPage(0);
+  };
+
+  // Ulaşım tipi seçimi
+  const toggleTypeFilter = (type) => {
+    setSelectedTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -173,42 +193,78 @@ function TransportationsManagement() {
         </div>
       )}
 
-      {/* Filtreleme UI'ı */}
-      {/* availableTransportationTypes.length > 0 && ( // This block is removed as per the new_code
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <h3 className="text-lg font-medium mb-4 text-gray-700">{t.transportations.filterByType}</h3>
-          <div className="flex flex-wrap gap-2 mb-4">
-            <button
-              onClick={clearFilter}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                selectedTransportationType === '' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+      {/* Arama ve Filtreleme UI'ı */}
+      <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+        <h3 className="text-lg font-medium text-gray-700">{t.transportations.searchAndFilter}</h3>
+        
+        {/* Arama Input */}
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder={t.transportations.searchTransportations}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleSearch();
+              }
+            }}
+          />
+          <Button 
+            onClick={handleSearch}
+            className="px-6 py-2"
+            disabled={loading}
+          >
+            {t.transportations.search}
+          </Button>
+          {(isSearchMode && (searchTerm || selectedTypes.length > 0)) && (
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              className="px-4 py-2"
             >
-              {t.transportations.allTypes}
-            </button>
-            {availableTransportationTypes.map(type => (
-              <button
-                key={type}
-                onClick={() => handleTransportationTypeFilter(type)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  selectedTransportationType === type 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {t.transportationTypes[type] || type}
-              </button>
-            ))}
-          </div>
-          {selectedTransportationType && (
-            <div className="text-sm text-gray-600">
-              {t.transportations.filteredBy}: <span className="font-medium">{t.transportationTypes[selectedTransportationType] || selectedTransportationType}</span>
-            </div>
+              {t.transportations.clearSearch}
+            </Button>
           )}
         </div>
-      ) */}
+
+        {/* Ulaşım Tipi Filtreleri */}
+        {availableTypes.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium mb-2 text-gray-700">{t.transportations.filterByType}</h4>
+            <div className="flex flex-wrap gap-2">
+              {availableTypes.map(type => (
+                <button
+                  key={type}
+                  onClick={() => toggleTypeFilter(type)}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    selectedTypes.includes(type)
+                      ? 'bg-blue-600 text-white border-2 border-blue-600'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 border-2 border-transparent'
+                  }`}
+                >
+                  {t.transportationTypes[type] || type}
+                </button>
+              ))}
+            </div>
+            {selectedTypes.length > 0 && (
+              <div className="text-sm text-gray-600 mt-2">
+                {t.transportations.filteredBy}: <span className="font-medium">
+                  {selectedTypes.map(type => t.transportationTypes[type] || type).join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Arama yardımı */}
+        {searchTerm && (
+          <div className="text-sm text-gray-600">
+            <p>{t.transportations.searchHelp}</p>
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <div className="text-center py-8">
@@ -217,15 +273,13 @@ function TransportationsManagement() {
       ) : (
         <>
           <TransportationsList
-            transportations={hasActiveFilters ? filteredTransportations : transportations}
-            allTransportations={allTransportations} // Tüm verileri geç
+            transportations={transportations}
             onEdit={handleEdit}
             onDelete={handleDelete}
             t={t}
-            onFilterChange={handleFilterChange}
           />
           
-          {totalPages > 1 && !hasActiveFilters && (
+          {totalPages > 1 && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

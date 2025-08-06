@@ -125,6 +125,30 @@ public class TransportationController {
         return transportationService.getTransportationsByLocations(originId, destinationId, page, size);
     }
 
+    @GetMapping("/filter")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+            summary = "Filter and search transportations",
+            description = "Filter transportations by search term and transportation types with pagination"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved filtered transportations",
+                    content = @Content(schema = @Schema(implementation = PageResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    public PageResponseDTO<TransportationDTO> filterTransportations(
+            @Parameter(description = "Search term for locations", required = false)
+            @RequestParam(required = false) String searchTerm,
+            @Parameter(description = "Transportation types to filter by", required = false)
+            @RequestParam(required = false) List<String> transportationTypes,
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+        return transportationService.filterTransportations(searchTerm, transportationTypes, page, size);
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
@@ -168,7 +192,7 @@ public class TransportationController {
 
     @PostMapping("/cache/clear")
     @PreAuthorize("hasRole('ADMIN')")
-    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_by_locations", "transportations_types", "routes"}, allEntries = true)
+    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_by_locations", "transportations_types", "transportations_filtered", "routes"}, allEntries = true)
     @Operation(
             summary = "Clear transportation cache",
             description = "Clears all transportation-related caches to force reload of data"

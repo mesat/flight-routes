@@ -3,3 +3,5 @@ databaseChangeLog:
       path: db/changelog/2025/07
   - include:
       file: db/changelog/2025/08/03-01-changelog.yaml
+  - include:
+      file: db/changelog/2025/08/06-01-changelog.yaml

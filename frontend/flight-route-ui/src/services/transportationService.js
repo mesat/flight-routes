@@ -47,5 +47,23 @@ export const transportationService = {
   getAllTransportationTypes: async () => {
     const response = await api.get('/api/transportations/types');
     return response;
+  },
+
+  // Filtreleme ile ulaşımları getir (pagination ile)
+  filterTransportations: async (searchTerm, transportationTypes, page = 0, size = 10) => {
+    let url = `/api/transportations/filter?page=${page}&size=${size}`;
+    
+    if (searchTerm && searchTerm.trim()) {
+      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+    }
+    
+    if (transportationTypes && transportationTypes.length > 0) {
+      transportationTypes.forEach(type => {
+        url += `&transportationTypes=${encodeURIComponent(type)}`;
+      });
+    }
+    
+    const response = await api.get(url);
+    return response;
   }
 };

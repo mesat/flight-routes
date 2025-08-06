@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -105,5 +106,37 @@ public class LocationController {
             @PathVariable Long id) {
         locationService.deleteLocation(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/cache/clear")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Clear location cache", description = "Clears all location-related caches to force reload of data")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Location caches cleared successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    @CacheEvict(value = {"locations", "routes"}, allEntries = true)
+    public ResponseEntity<String> clearCache() {
+        return ResponseEntity.ok("Location caches cleared successfully");
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AGENCY')")
+    @Operation(summary = "Search locations", description = "Search locations by name, city, country or code with pagination")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved locations",
+                    content = @Content(schema = @Schema(implementation = PageResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    public PageResponseDTO<LocationDTO> searchLocations(
+            @Parameter(description = "Search term for locations", required = false)
+            @RequestParam(required = false) String searchTerm,
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+        return locationService.searchLocations(searchTerm, page, size);
     }
 }

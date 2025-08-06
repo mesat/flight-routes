@@ -58,7 +58,7 @@ class RouteServiceAlgorithmIntegrationTest {
     @Test
     void findRoutes_withBeforeFlight_returnsRouteWithBeforeSegment() {
         LocationDTO ccIstanbul = locationService.createLocation(new LocationDTO(
-                null, "Taksim Square", "Türkiye", "İstanbul", "CCIST"));
+                null, "Taksim Square", "Türkiye", "İstanbul", "CCIST", false));
         LocationDTO istAirport = locationService.getLocationByCode("IST");
         LocationDTO lhrAirport = locationService.getLocationByCode("LHR");
 
@@ -86,11 +86,11 @@ class RouteServiceAlgorithmIntegrationTest {
     @Test
     void findRoutes_withAfterFlight_returnsRouteWithAfterSegment() {
         LocationDTO istAirport = locationService.createLocation(new LocationDTO(
-                null, "İstanbul Havalimanı", "Türkiye", "İstanbul", "IST"));
+                null, "İstanbul Havalimanı", "Türkiye", "İstanbul", "IST", true));
         LocationDTO lhrAirport = locationService.createLocation(new LocationDTO(
-                null, "Heathrow", "İngiltere", "Londra", "LHR"));
+                null, "Heathrow", "İngiltere", "Londra", "LHR", true));
         LocationDTO ccLondon = locationService.createLocation(new LocationDTO(
-                null, "Trafalgar Square", "İngiltere", "Londra", "CCLON"));
+                null, "Trafalgar Square", "İngiltere", "Londra", "CCLON", false));
 
         Set<Integer> flightDays = Set.of(DayOfWeek.SATURDAY.getValue(), DayOfWeek.SUNDAY.getValue());
         createTransportation(istAirport.getId(), lhrAirport.getId(),
@@ -116,13 +116,13 @@ class RouteServiceAlgorithmIntegrationTest {
     @Test
     void findRoutes_withBeforeAndAfterFlight_returnsRouteWithBothSegments() {
         LocationDTO ccIstanbul = locationService.createLocation(new LocationDTO(
-                null, "Taksim Square", "Türkiye", "İstanbul", "CCIST"));
+                null, "Taksim Square", "Türkiye", "İstanbul", "CCIST", false));
         LocationDTO istAirport = locationService.createLocation(new LocationDTO(
-                null, "İstanbul Havalimanı", "Türkiye", "İstanbul", "IST"));
+                null, "İstanbul Havalimanı", "Türkiye", "İstanbul", "IST", true));
         LocationDTO lhrAirport = locationService.createLocation(new LocationDTO(
-                null, "Heathrow", "İngiltere", "Londra", "LHR"));
+                null, "Heathrow", "İngiltere", "Londra", "LHR", true));
         LocationDTO ccLondon = locationService.createLocation(new LocationDTO(
-                null, "Trafalgar Square", "İngiltere", "Londra", "CCLON"));
+                null, "Trafalgar Square", "İngiltere", "Londra", "CCLON", false));
 
         createTransportation(ccIstanbul.getId(), istAirport.getId(),
                 Transportation.TransportationType.UBER, Set.of(1,2,3,4,5,6,7));
@@ -150,17 +150,17 @@ class RouteServiceAlgorithmIntegrationTest {
     @Test
     void findRoutes_withMultipleTransfers_producesCombinations() {
         LocationDTO ccIstanbul1 = locationService.createLocation(new LocationDTO(
-                null, "Taksim Square", "Türkiye", "İstanbul", "CCIST"));
+                null, "Taksim Square", "Türkiye", "İstanbul", "CCIST", false));
         LocationDTO ccIstanbul2 = locationService.createLocation(new LocationDTO(
-                null, "Kadıköy", "Türkiye", "İstanbul", "CKADK"));
+                null, "Kadıköy", "Türkiye", "İstanbul", "CKADK", false));
         LocationDTO istAirport = locationService.createLocation(new LocationDTO(
-                null, "İstanbul Havalimanı", "Türkiye", "İstanbul", "IST"));
+                null, "İstanbul Havalimanı", "Türkiye", "İstanbul", "IST", true));
         LocationDTO lhrAirport = locationService.createLocation(new LocationDTO(
-                null, "Heathrow", "İngiltere", "Londra", "LHR"));
+                null, "Heathrow", "İngiltere", "Londra", "LHR", true));
         LocationDTO ccLondon1 = locationService.createLocation(new LocationDTO(
-                null, "Trafalgar Square", "İngiltere", "Londra", "CCLON"));
+                null, "Trafalgar Square", "İngiltere", "Londra", "CCLON", false));
         LocationDTO ccLondon2 = locationService.createLocation(new LocationDTO(
-                null, "Canary Wharf", "İngiltere", "Londra", "CCLON2"));
+                null, "Canary Wharf", "İngiltere", "Londra", "CCLON2", false));
 
         createTransportation(ccIstanbul1.getId(), istAirport.getId(),
                 Transportation.TransportationType.BUS, Set.of(1,2,3,4,5,6,7));

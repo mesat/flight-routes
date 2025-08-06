@@ -2,6 +2,7 @@ package com.thy.flightroutes.dto;
 
 import com.thy.flightroutes.entity.Location;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -27,9 +28,10 @@ public class LocationDTO {
     private String city;
 
     @NotBlank(message = "Location code is required")
-    @Pattern(regexp = "^([A-Z]{3}|CC[A-Z]{2,4})$",
-            message = "Location code must be either a 3-letter IATA code or start with CC followed by 2-4 letters")
     private String locationCode;
+
+    @NotNull(message = "Airport status is required")
+    private Boolean isAirport;
 
     /**
      * Creates a LocationDTO from a Location entity
@@ -47,6 +49,7 @@ public class LocationDTO {
         dto.setCountry(entity.getCountry());
         dto.setCity(entity.getCity());
         dto.setLocationCode(entity.getLocationCode());
+        dto.setIsAirport(entity.getIsAirport());
 
         return dto;
     }

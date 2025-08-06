@@ -1,27 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { useTransportationSearch } from '../../hooks/useTransportationSearch';
 
-function TransportationsList({ transportations, allTransportations, onEdit, onDelete, t, onFilterChange }) {
-    const {
-        searchTerm,
-        setSearchTerm,
-        selectedTypes,
-        setSelectedTypes,
-        availableTypes,
-        toggleTypeFilter,
-        filteredAndGroupedTransportations,
-        clearAllFilters,
-        hasActiveFilters
-    } = useTransportationSearch(allTransportations); // Tüm verileri kullan
-
-    // Filtrelenmiş sonuçları parent'a bildir
-    useEffect(() => {
-        const allFiltered = Object.values(filteredAndGroupedTransportations).flat();
-        onFilterChange?.(allFiltered, hasActiveFilters);
-    }, [filteredAndGroupedTransportations, hasActiveFilters]); // onFilterChange dependency'sini kaldırdık
+function TransportationsList({ transportations, onEdit, onDelete, t }) {
 
     // Helper to format operating days
     const formatOperatingDays = (days) => {
@@ -41,88 +21,28 @@ function TransportationsList({ transportations, allTransportations, onEdit, onDe
         return styles[type] || 'bg-gray-100 text-gray-800';
     };
 
+    // Ülke bazlı gruplandırma
+    const groupedTransportations = transportations.reduce((acc, transport) => {
+        const country = transport.originLocation?.country || 'Bilinmeyen Ülke';
+        if (!acc[country]) {
+            acc[country] = [];
+        }
+        acc[country].push(transport);
+        return acc;
+    }, {});
+
+    // Ülkeleri alfabetik sırala
+    const sortedCountries = Object.keys(groupedTransportations).sort();
+
     return (
         <div className="space-y-4">
-            {/* Arama ve Filtreleme */}
-            <div className="space-y-3">
-                {/* Arama Input */}
-                <div className="flex items-center space-x-2">
-                    <Input
-                        type="text"
-                        placeholder={t.transportations.searchTransportations}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="max-w-md"
-                    />
-                    {hasActiveFilters && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={clearAllFilters}
-                        >
-                            {t.transportations.clearSearch}
-                        </Button>
-                    )}
-                </div>
-
-                {/* Arama Yardımı */}
-                {searchTerm && (
-                    <div className="text-sm text-gray-600">
-                        <p>{t.transportations.searchHelp}</p>
-                        <p className="mt-1 text-xs text-gray-500">
-                            {t.transportations.searchExample}
-                        </p>
-                    </div>
-                )}
-
-                {/* Ulaşım Tipi Filtreleri - Arama butonunun üstünde, aynı style */}
-                {availableTypes.length > 0 && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="text-sm font-medium mb-3 text-gray-700">{t.transportations.filterByType}</h3>
-                        <div className="flex flex-wrap gap-2">
-                            <button
-                                onClick={() => {
-                                    setSelectedTypes([]);
-                                    setSearchTerm('');
-                                }}
-                                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                                    selectedTypes.length === 0 && searchTerm === ''
-                                        ? 'bg-blue-600 text-white' 
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                {t.transportations.allTypes}
-                            </button>
-                            {availableTypes.map(type => (
-                                <button
-                                    key={type}
-                                    onClick={() => toggleTypeFilter(type)}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                                        selectedTypes.includes(type)
-                                            ? `${getTypeStyle(type)} border-2 border-current`
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    {t.transportationTypes[type] || type}
-                                </button>
-                            ))}
-                        </div>
-                        {selectedTypes.length > 0 && (
-                            <div className="text-sm text-gray-600 mt-2">
-                                {t.transportations.filteredBy}: <span className="font-medium">{selectedTypes.map(type => t.transportationTypes[type] || type).join(', ')}</span>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-
             {/* Gruplandırılmış Ulaşımlar */}
-            {Object.keys(filteredAndGroupedTransportations).length > 0 ? (
-                Object.entries(filteredAndGroupedTransportations).map(([country, countryTransportations]) => (
+            {sortedCountries.length > 0 ? (
+                sortedCountries.map((country) => (
                     <div key={country} className="border rounded-lg overflow-hidden">
                         <div className="bg-gray-50 px-4 py-2 border-b">
                             <h3 className="font-semibold text-gray-800">{country}</h3>
-                            <p className="text-sm text-gray-600">{countryTransportations.length} ulaşım</p>
+                            <p className="text-sm text-gray-600">{groupedTransportations[country].length} ulaşım</p>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left min-w-full">
@@ -136,7 +56,7 @@ function TransportationsList({ transportations, allTransportations, onEdit, onDe
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {countryTransportations.map(transport => (
+                                    {groupedTransportations[country].map(transport => (
                                         <tr key={transport.id} className="bg-white border-t hover:bg-gray-50">
                                             <td className="px-3 lg:px-6 py-4">
                                                 <div className="font-medium">
@@ -193,7 +113,7 @@ function TransportationsList({ transportations, allTransportations, onEdit, onDe
                 ))
             ) : (
                 <div className="text-center py-8 text-gray-500">
-                    {hasActiveFilters ? t.transportations.noTransportationsFound : t.transportations.noTransportations}
+                    {t.transportations.noTransportations}
                 </div>
             )}
         </div>

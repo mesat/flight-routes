@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1754459479071-1
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: is_airport
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+            tableName: locations
+  - changeSet:
+      id: 1754459479071-2
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnDataType: BOOLEAN
+            columnName: is_airport
+            tableName: locations
+  - changeSet:
+      id: 1754459479071-3
+      author: msakarya
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - update:
+            tableName: locations
+            columns:
+              - column:
+                  name: is_airport
+                  valueBoolean: true
+            where: "LENGTH(location_code) = 3"
+

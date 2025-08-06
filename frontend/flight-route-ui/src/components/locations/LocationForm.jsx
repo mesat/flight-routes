@@ -29,8 +29,36 @@ function LocationForm({
             {isEditing ? t.locations.editLocationDesc : t.locations.addLocationDesc}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit}>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit(safeFormData);
+        }}>
           <div className="space-y-3 lg:space-y-4 py-2 lg:py-4">
+            {/* Havalimanı Checkbox */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isAirport"
+                checked={safeFormData.isAirport || false}
+                onChange={(e) => {
+                  if (isEditing) {
+                    // Düzenleme modunda değiştirilemez
+                    return;
+                  }
+                  setFormData(prev => ({
+                    ...prev,
+                    isAirport: e.target.checked,
+                    locationCode: '' // Kod tipini değiştirdiğinde kodu temizle
+                  }))
+                }}
+                disabled={isEditing}
+                className={`h-4 w-4 text-blue-600 ${isEditing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              />
+              <label htmlFor="isAirport" className={`text-sm font-medium ${isEditing ? 'text-gray-500' : 'text-gray-700'}`}>
+                {t?.locations?.isAirport || 'Havalimanı mı?'}
+                {isEditing && <span className="text-xs text-gray-500 ml-2">({t?.locations?.cannotChangeAirportStatus || 'Havalimanı durumu sonradan değiştirilemez'})</span>}
+              </label>
+            </div>
             <div className="space-y-1 lg:space-y-2">
               <label className="text-sm font-medium">{t.locations.name}</label>
               <Input
@@ -79,11 +107,13 @@ function LocationForm({
                   locationCode: e.target.value.toUpperCase()
                 }))}
                 required
-                placeholder="IST or CCIST"
+                placeholder={safeFormData.isAirport ? "IST (3 harf IATA kodu)" : "TAKSIM (4-7 harf)"}
                 className="text-sm"
               />
               <p className="text-xs lg:text-sm text-gray-500">
-                {t.locations.codeHelp}
+                {safeFormData.isAirport 
+                  ? (t?.locations?.airportCodeHelp || '3 harfli IATA havalimanı kodu (örn: IST, SAW, ADB)')
+                  : (t?.locations?.nonAirportCodeHelp || '4-7 harfli lokasyon kodu (örn: TAKSIM, KADIKOY, GALATA)')}
               </p>
             </div>
           </div>

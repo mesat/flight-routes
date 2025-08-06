@@ -76,14 +76,28 @@ export const post = async (url, data) => {
 
 // PUT request
 export const put = async (url, data) => {
+  console.log('PUT request:', { url, data });
   const response = await fetchWithAuth(url, {
     method: 'PUT',
     body: JSON.stringify(data)
   });
   
+  console.log('PUT response:', { status: response.status, ok: response.ok });
+  
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(errorText || `PUT request failed: ${response.status}`);
+    console.error('PUT error response:', errorText);
+    
+    try {
+      const errorJson = JSON.parse(errorText);
+      const error = new Error(errorJson.message || `PUT request failed: ${response.status}`);
+      error.response = { data: errorJson, status: response.status };
+      throw error;
+    } catch (parseError) {
+      const error = new Error(errorText || `PUT request failed: ${response.status}`);
+      error.response = { data: { message: errorText }, status: response.status };
+      throw error;
+    }
   }
   
   return response.json();

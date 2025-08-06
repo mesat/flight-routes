@@ -28,5 +28,19 @@ export const locationService = {
   getLocationByCode: async (code) => {
     const response = await api.get(`/api/locations/${code}`);
     return response;
+  },
+
+  // Lokasyon arama (pagination ile)
+  searchLocations: async (searchTerm, page = 0, size = 10) => {
+    let url = `/api/locations/search?page=${page}&size=${size}`;
+    
+    if (searchTerm && searchTerm.trim()) {
+      url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+    }
+    
+    console.log('Search URL:', url);
+    const response = await api.get(url);
+    console.log('Search API response:', response);
+    return response;
   }
 };

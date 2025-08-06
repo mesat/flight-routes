@@ -81,7 +81,7 @@ public class TransportationService {
     }
 
     // Granular cache eviction - only clear related caches
-    @CacheEvict(value = {"transportations_search", "transportations_paginated"}, allEntries = true)
+    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_filtered"}, allEntries = true)
     public TransportationDTO createTransportation(TransportationDTO dto) {
         validateTransportation(dto);
 
@@ -102,7 +102,7 @@ public class TransportationService {
     }
 
     // Granular cache eviction - only clear related caches
-    @CacheEvict(value = {"transportations_search", "transportations_paginated"}, allEntries = true)
+    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_filtered"}, allEntries = true)
     public TransportationDTO updateTransportation(Long id, TransportationDTO dto) {
         validateTransportation(dto);
 
@@ -125,7 +125,7 @@ public class TransportationService {
     }
 
     // Granular cache eviction - only clear related caches
-    @CacheEvict(value = {"transportations_search", "transportations_paginated"}, allEntries = true)
+    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_filtered"}, allEntries = true)
     public void deleteTransportation(Long id) {
         if (!transportationRepository.existsById(id)) {
             throw new ResourceNotFoundException("Transportation not found: " + id);
@@ -147,6 +147,37 @@ public class TransportationService {
         return transportations.stream()
                 .map(TransportationDTO::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @Cacheable(value = "transportations_filtered", key = "'search_' + (#searchTerm != null ? #searchTerm : 'null') + '_types_' + (#transportationTypes != null ? #transportationTypes.toString() : 'null') + '_page_' + #page + '_size_' + #size")
+    public PageResponseDTO<TransportationDTO> filterTransportations(String searchTerm, List<String> transportationTypes, int page, int size) {
+        // String tiplerini TransportationType enum'a çevir
+        List<TransportationType> types = null;
+        if (transportationTypes != null && !transportationTypes.isEmpty()) {
+            types = transportationTypes.stream()
+                    .map(TransportationType::valueOf)
+                    .collect(Collectors.toList());
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Page<Transportation> transportationPage = transportationRepository.findBySearchTermAndTransportationTypes(
+                searchTerm, types, pageable);
+
+        List<TransportationDTO> content = transportationPage.getContent().stream()
+                .map(TransportationDTO::fromEntity)
+                .collect(Collectors.toList());
+
+        return new PageResponseDTO<>(
+                content,
+                page,
+                size,
+                transportationPage.getTotalElements(),
+                transportationPage.getTotalPages(),
+                transportationPage.hasNext(),
+                transportationPage.hasPrevious(),
+                transportationPage.isFirst(),
+                transportationPage.isLast()
+        );
     }
 
     private void validateTransportation(TransportationDTO dto) {

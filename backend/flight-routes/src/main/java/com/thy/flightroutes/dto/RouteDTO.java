@@ -57,7 +57,8 @@ public class RouteDTO {
                         original.getOriginLocation().getName(),
                         original.getOriginLocation().getCountry(),
                         original.getOriginLocation().getCity(),
-                        original.getOriginLocation().getLocationCode()
+                        original.getOriginLocation().getLocationCode(),
+                        original.getOriginLocation().getIsAirport()
                 ));
             }
 
@@ -67,7 +68,8 @@ public class RouteDTO {
                         original.getDestinationLocation().getName(),
                         original.getDestinationLocation().getCountry(),
                         original.getDestinationLocation().getCity(),
-                        original.getDestinationLocation().getLocationCode()
+                        original.getDestinationLocation().getLocationCode(),
+                        original.getDestinationLocation().getIsAirport()
                 ));
             }
 
@@ -96,7 +98,8 @@ public class RouteDTO {
                         original.getOriginLocation().getName(),
                         original.getOriginLocation().getCountry(),
                         original.getOriginLocation().getCity(),
-                        original.getOriginLocation().getLocationCode()
+                        original.getOriginLocation().getLocationCode(),
+                        original.getOriginLocation().getIsAirport()
                 ));
             }
 
@@ -106,7 +109,8 @@ public class RouteDTO {
                         original.getDestinationLocation().getName(),
                         original.getDestinationLocation().getCountry(),
                         original.getDestinationLocation().getCity(),
-                        original.getDestinationLocation().getLocationCode()
+                        original.getDestinationLocation().getLocationCode(),
+                        original.getDestinationLocation().getIsAirport()
                 ));
             }
 
@@ -135,7 +139,8 @@ public class RouteDTO {
                         original.getOriginLocation().getName(),
                         original.getOriginLocation().getCountry(),
                         original.getOriginLocation().getCity(),
-                        original.getOriginLocation().getLocationCode()
+                        original.getOriginLocation().getLocationCode(),
+                        original.getOriginLocation().getIsAirport()
                 ));
             }
 
@@ -145,7 +150,8 @@ public class RouteDTO {
                         original.getDestinationLocation().getName(),
                         original.getDestinationLocation().getCountry(),
                         original.getDestinationLocation().getCity(),
-                        original.getDestinationLocation().getLocationCode()
+                        original.getDestinationLocation().getLocationCode(),
+                        original.getDestinationLocation().getIsAirport()
                 ));
             }
 

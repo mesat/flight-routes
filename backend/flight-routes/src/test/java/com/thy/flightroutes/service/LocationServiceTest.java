@@ -32,13 +32,14 @@ class LocationServiceTest {
 
     @BeforeEach
     void setUp() {
-        validDto = new LocationDTO(null, "Istanbul Airport", "Türkiye", "İstanbul", "IST");
+        validDto = new LocationDTO(null, "Istanbul Airport", "Türkiye", "İstanbul", "IST", true);
         existingLocation = new Location();
         existingLocation.setId(1L);
         existingLocation.setName("Istanbul Airport");
         existingLocation.setCountry("Türkiye");
         existingLocation.setCity("İstanbul");
         existingLocation.setLocationCode("IST");
+        existingLocation.setIsAirport(true);
     }
 
     @Test
@@ -64,7 +65,7 @@ class LocationServiceTest {
 
     @Test
     void createLocation_withInvalidCode_shouldThrowException() {
-        LocationDTO invalid = new LocationDTO(null, "Test", "Test", "Test", "INVALID");
+        LocationDTO invalid = new LocationDTO(null, "Test", "Test", "Test", "INVALID", false);
         when(locationRepository.findByLocationCode("INVALID")).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> locationService.createLocation(invalid));
@@ -102,7 +103,7 @@ class LocationServiceTest {
         locationToUpdate.setId(1L);
         locationToUpdate.setLocationCode("ABC");
 
-        LocationDTO invalid = new LocationDTO(null, "Test", "Test", "Test", "BADCODE");
+        LocationDTO invalid = new LocationDTO(null, "Test", "Test", "Test", "BADCODE", false);
         when(locationRepository.findById(1L)).thenReturn(Optional.of(locationToUpdate));
         when(locationRepository.findByLocationCode("BADCODE")).thenReturn(Optional.empty());
 

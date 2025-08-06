@@ -41,9 +41,16 @@ export const validateToken = async (token) => {
       return false;
     }
     
-    // Token'ın geçerliliğini kontrol et (opsiyonel)
-    const response = await api.get('/api/locations');
-    return response.ok;
+    // JWT token'ın süresini kontrol et
+    const payload = parseJwt(token);
+    const currentTime = Math.floor(Date.now() / 1000);
+    
+    if (payload.exp && payload.exp < currentTime) {
+      console.log('Token expired');
+      return false;
+    }
+    
+    return true;
   } catch (e) {
     console.error('Token validation error:', e);
     return false;

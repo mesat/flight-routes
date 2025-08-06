@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { login as apiLogin, logout as apiLogout } from '../services/auth';
+import { login as apiLogin, logout as apiLogout, validateToken } from '../services/auth';
 
 // Create context
 const AuthContext = createContext(null);
@@ -16,8 +16,16 @@ export const AuthProvider = ({ children }) => {
       const userType = localStorage.getItem('userType');
       
       if (token && userType) {
-        // Token varsa direkt olarak auth state'ini set et
-        setAuth({ token, userType });
+        // Token'ın geçerliliğini kontrol et
+        const isValid = await validateToken(token);
+        if (isValid) {
+          setAuth({ token, userType });
+        } else {
+          // Token geçersizse temizle
+          localStorage.removeItem('token');
+          localStorage.removeItem('userType');
+          setAuth(null);
+        }
       } else {
         setAuth(null);
       }

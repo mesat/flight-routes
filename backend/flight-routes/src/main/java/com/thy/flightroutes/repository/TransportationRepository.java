@@ -87,4 +87,23 @@ public interface TransportationRepository extends JpaRepository<Transportation, 
 
     @Query("SELECT DISTINCT t.transportationType FROM Transportation t")
     List<TransportationType> findDistinctTransportationTypes();
+
+    @Query("SELECT t FROM Transportation t " +
+           "JOIN FETCH t.originLocation ol " +
+           "JOIN FETCH t.destinationLocation dl " +
+           "WHERE (:searchTerm IS NULL OR " +
+           "LOWER(ol.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(ol.city) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(ol.country) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(ol.locationCode) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(dl.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(dl.city) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(dl.country) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(dl.locationCode) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+           "AND (:transportationTypes IS NULL OR t.transportationType IN :transportationTypes)")
+    Page<Transportation> findBySearchTermAndTransportationTypes(
+            @Param("searchTerm") String searchTerm,
+            @Param("transportationTypes") List<TransportationType> transportationTypes,
+            Pageable pageable
+    );
 }

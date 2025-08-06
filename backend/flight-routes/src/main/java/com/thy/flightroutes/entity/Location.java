@@ -32,6 +32,9 @@ public class Location {
     @Column(name = "location_code", nullable = false, unique = true)
     private String locationCode;
 
+    @Column(name = "is_airport", nullable = false)
+    private Boolean isAirport = false;
+
     @OneToMany(mappedBy = "originLocation")
     private Set<Transportation> departingTransportations = new HashSet<>();
 
