@@ -81,7 +81,7 @@ public class TransportationService {
     }
 
     // Granular cache eviction - only clear related caches
-    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_filtered"}, allEntries = true)
+    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_filtered", "routes"}, allEntries = true)
     public TransportationDTO createTransportation(TransportationDTO dto) {
         validateTransportation(dto);
 
@@ -102,7 +102,7 @@ public class TransportationService {
     }
 
     // Granular cache eviction - only clear related caches
-    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_filtered"}, allEntries = true)
+    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_filtered", "routes"}, allEntries = true)
     public TransportationDTO updateTransportation(Long id, TransportationDTO dto) {
         validateTransportation(dto);
 
@@ -125,7 +125,7 @@ public class TransportationService {
     }
 
     // Granular cache eviction - only clear related caches
-    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_filtered"}, allEntries = true)
+    @CacheEvict(value = {"transportations_search", "transportations_paginated", "transportations_filtered", "routes"}, allEntries = true)
     public void deleteTransportation(Long id) {
         if (!transportationRepository.existsById(id)) {
             throw new ResourceNotFoundException("Transportation not found: " + id);

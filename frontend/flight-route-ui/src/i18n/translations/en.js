@@ -65,10 +65,14 @@ const en = {
     SZF: 'Samsun Airport',
     ADA: 'Adana Airport',
     GZP: 'Gazipasa Airport',
-    BJV: 'Milas-Bodrum Airport',
-    DLM: 'Dalaman Airport',
-    TZX: 'Trabzon Airport',
-    GZT: 'Gaziantep Airport'
+    // International airports
+    CGN: 'Cologne Bonn Airport',
+    LHR: 'Heathrow Airport',
+    CDG: 'Charles de Gaulle Airport',
+    DXB: 'Dubai International Airport',
+    SYD: 'Sydney Kingsford Smith Airport',
+    SIN: 'Changi Airport',
+    DOH: 'Hamad International Airport'
   },
   transportations: {
     title: 'Transportations',

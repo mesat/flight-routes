@@ -49,11 +49,11 @@ function RoutesList({ routes }) {
                 </div>
                 <div className="flex justify-between text-sm">
                   <div>
-                    <div className="font-medium">{route.beforeFlight.originLocation.name}</div>
+                    <div className="font-medium">{t.locations[route.beforeFlight.originLocation.locationCode] || route.beforeFlight.originLocation.name}</div>
                     <div className="text-xs text-gray-500">{route.beforeFlight.originLocation.locationCode}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">{route.beforeFlight.destinationLocation.name}</div>
+                    <div className="font-medium">{t.locations[route.beforeFlight.destinationLocation.locationCode] || route.beforeFlight.destinationLocation.name}</div>
                     <div className="text-xs text-gray-500">{route.beforeFlight.destinationLocation.locationCode}</div>
                   </div>
                 </div>
@@ -72,11 +72,11 @@ function RoutesList({ routes }) {
               </div>
               <div className="flex justify-between text-sm">
                 <div>
-                  <div className="font-medium">{route.flight.originLocation.name}</div>
+                  <div className="font-medium">{t.locations[route.flight.originLocation.locationCode] || route.flight.originLocation.name}</div>
                   <div className="text-xs text-gray-500">{route.flight.originLocation.locationCode}</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium">{route.flight.destinationLocation.name}</div>
+                  <div className="font-medium">{t.locations[route.flight.destinationLocation.locationCode] || route.flight.destinationLocation.name}</div>
                   <div className="text-xs text-gray-500">{route.flight.destinationLocation.locationCode}</div>
                 </div>
               </div>
@@ -95,11 +95,11 @@ function RoutesList({ routes }) {
                 </div>
                 <div className="flex justify-between text-sm">
                   <div>
-                    <div className="font-medium">{route.afterFlight.originLocation.name}</div>
+                    <div className="font-medium">{t.locations[route.afterFlight.originLocation.locationCode] || route.afterFlight.originLocation.name}</div>
                     <div className="text-xs text-gray-500">{route.afterFlight.originLocation.locationCode}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">{route.afterFlight.destinationLocation.name}</div>
+                    <div className="font-medium">{t.locations[route.afterFlight.destinationLocation.locationCode] || route.afterFlight.destinationLocation.name}</div>
                     <div className="text-xs text-gray-500">{route.afterFlight.destinationLocation.locationCode}</div>
                   </div>
                 </div>

@@ -65,10 +65,14 @@ const tr = {
     SZF: 'Samsun Havalimanı',
     ADA: 'Adana Havalimanı',
     GZP: 'Gazipaşa Havalimanı',
-    BJV: 'Milas-Bodrum Havalimanı',
-    DLM: 'Dalaman Havalimanı',
-    TZX: 'Trabzon Havalimanı',
-    GZT: 'Gaziantep Havalimanı'
+    // Yurtdışı havalimanları
+    CGN: 'Köln Bonn Havalimanı',
+    LHR: 'Heathrow Havalimanı',
+    CDG: 'Charles de Gaulle Havalimanı',
+    DXB: 'Dubai Uluslararası Havalimanı',
+    SYD: 'Sydney Kingsford Smith Havalimanı',
+    SIN: 'Changi Havalimanı',
+    DOH: 'Hamad Uluslararası Havalimanı'
   },
   transportations: {
     title: 'Ulaşımlar',
